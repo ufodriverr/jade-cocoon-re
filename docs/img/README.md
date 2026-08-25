@@ -9,7 +9,6 @@ not captured from the game. Nothing here needs a disc.
 - `merge_sweep.png` - the five `sweep_833x867_*` files from `models/merged/`, all on the
   same rig, the same clip and the same frame, with the camera locked to the union of all
   five bounding boxes. Only the geometry changes across the row.
-
 - `merge_studio_age.png` - one merged creature (Arpatron x Skawasp) at levels 1, 7, 13, 22
   and 40, captured from the live `tools/merge_studio.py` with the camera held still so the
   size change is real. This one DOES need a disc, because the growth stages only exist in
