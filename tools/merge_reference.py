@@ -105,7 +105,6 @@ def slot_inherit(base_slots, material_slots):
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 DEFAULT_RIG = 0x80079064       # the 25-bone table the whole morph family uses
-REST_POSE_LIMIT = 15           # degrees; past this a blend stops being meaningful
 EXE_LOAD = 0x80010000          # PS-X EXE t_addr; file offset = 0x800 + (addr - t_addr)
 SPECIES_TABLE = 0x8007BC54     # SpeciesRec[365]      (FUN_80019C70)
 SPECIES_SPAN = 365             # up to the growth-stage thresholds at 0x8007C208
@@ -123,21 +122,30 @@ NAME_POOL = (0x80072234, 0x80072F60)   # the strings themselves
 ELEMENT_RSIN = (739, 1763, 2787, 3811)
 NO_HUE = -1000                 # FUN_800BF4C0's "single element" sentinel
 
-# On-disc SVECTOR runs the blend walks, per chunk type: (firstByte, count).
-# Each entry satisfies first + count*8 == the type's on-disc body size, and each
-# matches the runtime record's run once the loader's extra UV and colour fields
-# are subtracted. Slot 0 of the flat types is the face normal; the gouraud types
-# interleave normal, position, normal, position...
-SVEC_RUN = {
-    0: (0x04, 4),   # F3   body 0x24
-    1: (0x0C, 6),   # G3   body 0x3C
-    2: (0x04, 4),   # FT3  body 0x24
-    3: (0x10, 6),   # GT3  body 0x40
-    4: (0x04, 5),   # F4   body 0x2C
-    5: (0x10, 8),   # G4   body 0x50
-    6: (0x04, 5),   # FT4  body 0x2C
-    7: (0x14, 8),   # GT4  body 0x54
+# Which SVECTORs inside a primitive the blend has to touch.
+#
+# This used to carry its own (first, count) table describing each chunk body as a
+# contiguous run of 8-byte SVECTORs. That table was wrong, and wrong in a way that
+# hid well: it satisfied `first + count*8 == body size`, so it looked self-consistent
+# and every check written against it agreed with it. What it missed is that a chunk
+# body starts 4 bytes into the chunk, and that the gouraud types stride 16 bytes per
+# vertex (normal, position, UV, colour), not 8. Every vertex was therefore blended 4
+# bytes early, across the boundary between two fields, which is why a merge came out
+# as geometry belonging to neither parent.
+#
+# So the layout is no longer described twice. `export_mesh.GEOM` is what the exporter
+# and Merge Studio decode with, and it is now what the blend writes through, which
+# makes "the bytes the blend touches" and "the bytes the exporter reads" the same set
+# by construction.
+#
+#   GEOM[t]    = (nVerts, firstBlockOff, blockStride, posOffsetInBlock), body = p + 4
+#   NORMALS[t] = ("face", off) one normal for the whole primitive, or
+#                ("vert", off) one per vertex, at that offset inside its block
+NORMALS = {
+    0: ("face", 0x04), 2: ("face", 0x04), 4: ("face", 0x04), 6: ("face", 0x04),
+    1: ("vert", 0), 3: ("vert", 0), 5: ("vert", 0), 7: ("vert", 0),
 }
+GEOM_TYPES = frozenset(NORMALS)
 # Seam-pool items (chunk types 8 and 9) are 0x14 bytes: normal at +0, position
 # at +8, then UV and vertex colour, which the blend leaves alone.
 SEAM_ITEM = 0x14
@@ -366,47 +374,28 @@ def lerp_svec(dst, src, w):
     return out
 
 
-def rest_pose_divergence(srcs, anim_secs):
-    """Largest angle, in degrees, by which each source's rest pose differs from the
-    base's.
-
-    Vertices are stored per bone and relative to that bone, so a blend only means
-    something if the parents hold their skeletons at roughly the same default
-    angles. Inside the morph family most pairs do - 833 and 867 agree to within 4
-    degrees - but some are far apart: 833 and 864 differ by 55, and blending those
-    two produces geometry that no single skeleton can carry. See
-    MERGE_ALGORITHM.md, "Where the export blend stops being trustworthy".
-    """
-    import anim as animmod
-    out = []
-    blks = []
-    for i, s_ in enumerate(srcs):
-        c = animmod.parse_container(s_, anim_secs[i] * 2048)
-        blks.append(c[0] if c else None)
-    if blks[0] is None:
-        return [0.0] * len(srcs)
-    nb = min(b["bones"] for b in blks if b is not None)
-    for i in range(len(srcs)):
-        if blks[i] is None or i == 0:
-            out.append(0.0)
-            continue
-        worst = 0
-        for b in range(nb):
-            a = animmod.keyframe(srcs[0], blks[0], 0, b)
-            c = animmod.keyframe(srcs[i], blks[i], 0, b)
-            for k in range(3):
-                d = abs(((c[k] - a[k] + 0x800) & 0xFFF) - 0x800)
-                worst = max(worst, d)
-        out.append(worst * 360.0 / 4096.0)
-    return out
+def _svec_offsets(t):
+    """Byte offsets, relative to the chunk, of every SVECTOR in a primitive of
+    type `t`: its normal(s) and its vertex positions."""
+    import export_mesh
+    nv, first, stride, posoff = export_mesh.GEOM[t]
+    kind, noff = NORMALS[t]
+    body = 4                                    # the chunk body starts at p + 4
+    offs = []
+    if kind == "face":
+        offs.append(body + noff)                # one normal for the whole face
+    for i in range(nv):
+        blk = body + first + i * stride
+        if kind == "vert":
+            offs.append(blk + noff)
+        offs.append(blk + posoff)
+    return offs
 
 
-def blend_run(buf, dst_off, src, src_off, run, w):
-    """Blend one primitive's SVECTOR run in place inside `buf`."""
-    first, count = run
-    for k in range(count):
-        d = dst_off + first + k * 8
-        s = src_off + first + k * 8
+def blend_prim(buf, dst_off, src, src_off, t, w):
+    """Blend one primitive's normals and positions in place inside `buf`."""
+    for off in _svec_offsets(t):
+        d, s = dst_off + off, src_off + off
         a = struct.unpack_from("<3h", buf, d)
         b = struct.unpack_from("<3h", src, s)
         struct.pack_into("<3h", buf, d, *lerp_svec(a, b, w))
@@ -458,8 +447,8 @@ def blend_mesh(out, srcs, mesh_secs, stage_weights, job_weights):
                 if t2 != t:
                     raise SystemExit("mesh object %d chunk %d: type %d vs %d"
                                      % (mi, ci, t, t2))
-                if t in SVEC_RUN:
-                    blend_run(out, p, srcs[src_i], p2, SVEC_RUN[t], w[src_i])
+                if t in GEOM_TYPES:
+                    blend_prim(out, p, srcs[src_i], p2, t, w[src_i])
                 elif t in (8, 9):
                     base = 4 if t == 8 else 8
                     cnt = struct.unpack_from("<I", out, p + 4)[0]
@@ -694,16 +683,8 @@ def build_merged_package(exe, split_dir, sources, weights, stage,
         st = app["stages"][stage] if app and stage < len(app["stages"]) else None
         stage_w.append(st["meshWeights"] if st else None)
 
-    div = rest_pose_divergence(srcs, anim_secs)
     blend_mesh(out, srcs, mesh_secs, stage_w, weights)
     notes.append("mesh blended from files %s at weights %s" % (sources, weights))
-    for i, deg in enumerate(div):
-        if i and weights[i] and deg > REST_POSE_LIMIT:
-            notes.append("WARNING: file %d holds a bone %.0f degrees away from the "
-                         "base's rest pose. Past about %d degrees the parents no "
-                         "longer share a frame of reference and the blend distorts; "
-                         "see MERGE_ALGORITHM.md."
-                         % (sources[i], deg, REST_POSE_LIMIT))
 
     if blend_pose:
         n = blend_rest_pose(out, srcs, anim_secs, weights, slots)

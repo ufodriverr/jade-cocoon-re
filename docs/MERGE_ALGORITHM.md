@@ -1110,84 +1110,97 @@ party would settle it in a minute.
 
 ---
 
-# WHERE THE EXPORT BLEND STOPS BEING TRUSTWORTHY (2026-08-25, later still)
+# THE MERGE EXPORT WAS BLENDING THE WRONG BYTES (2026-08-25, later still)
 
-## The rest pose is half the blend - CONFIRMED
+## The bug - CONFIRMED, FIXED
 
 A user merged Arpatron with Skawasp in Merge Studio, exported the GLB, and got a
-creature whose skin had come off its skeleton: the silhouette was roughly right and
-the surface was a fan of long thin shards. The live tool looked fine; only the export
-was wrong. Everything obvious checked out and had to be eliminated one at a time:
+creature whose skin had come off its skeleton: roughly the right silhouette, made of
+long thin shards. Merge Studio itself rendered the same blend perfectly. So the blend
+was right and the **export** was wrong, and the two do the same job in two places.
 
-- the blended mesh is **byte-exact**. At weight 4096 all 2,889 SVECTOR slots equal the
-  source model's own, seam pools included.
-- the rest-offset blend is right, the bone hierarchy is identical across the family,
-  the mesh-object headers match, the per-mesh-object stage weights agree, the
-  appearance blob's per-bone scales are all identity at stage 4, and every one of these
-  models uses the same 25-bone table at `0x80079064`.
-- `check_glb.py` passes the broken file, because it only checks the **bind pose**, and
-  at bind pose every skin matrix is `world(joint) * inverseBind(joint) = identity`. A
-  rig that disagrees with its geometry still looks perfect there.
+`merge_reference.blend_mesh` carried its own description of a primitive's layout:
 
-The cause is that **a vertex is stored per bone and relative to that bone**, so what
-its numbers mean depends on where the bone is pointing in the rest pose. `export_gltf`
-builds the bind pose from the rest offsets **and the first block's frame-0 rotations**.
-Blending only the offsets, as the exporter used to, leaves the blended geometry hanging
-on the base parent's default angles.
+```
+SVEC_RUN = {..., 7: (0x14, 8), ...}   # GT4: 8 SVECTORs from +0x14, 8 bytes apart
+```
 
-How far apart two parents hold the same bone decides how badly that shows:
+`export_mesh.GEOM`, which the exporter and Merge Studio decode with, says something
+different:
 
-| pair | worst bone | result |
-|------|-----------|--------|
-| 833 x 867 | 3.6 deg | fine; this was the demo pair, which is why the bug hid |
-| 833 x 850 | 0.0 deg | fine |
-| 833 x 862 | 4.1 deg | fine |
-| 833 x 845 | 15.6 deg | visibly distorted |
-| 833 x 860 | 28.1 deg | distorted |
-| 833 x 907 | 45.4 deg | badly distorted |
-| 833 x 864 | 55.1 deg | the reported break |
-| 833 x 899 | 179.4 deg | nothing survives |
+```
+GEOM[7] = (4, 0x14, 16, 8)   # 4 vertices from body+0x14, stride 16, position at +8
+                             # and the body starts at chunk + 4
+```
 
-**Only 12 of the 25-mesh family are within 15 degrees of 833.** Sharing a topology is
-not the same as sharing a pose, and the "49 models are each other's morph targets"
-result is about topology alone.
+Two errors, compounding. The chunk **body begins 4 bytes into the chunk**, and the
+gouraud types stride **16** bytes per vertex - normal, position, UV, colour - not 8.
+For a GT4 the positions are at `+0x20, 0x30, 0x40, 0x50`; the blend was writing
+`+0x14, 0x1C, 0x24, ...`. Every vertex was blended four bytes early, straddling the
+boundary between two fields, so the result was geometry belonging to neither parent.
 
-The game never hits this. It builds a fresh single-frame pose for the merged creature,
-so its skeleton and its geometry always agree. An export is different: it keeps one
-parent's whole clip set so that all 29 animations still play, which pins the skeleton
-to that parent.
+**Why it survived so long.** `SVEC_RUN` satisfied `first + count*8 == body size`, so
+it looked internally consistent and its comment said so. Worse, the obvious check -
+"blend at weight 4096 and compare the result against the source, chunk by chunk" -
+compares using the same table the blend uses. It passed with 0 differences on all 2,889
+slots while the output was visibly wrong. **A validator that shares an assumption with
+the thing it validates proves nothing**, and this is the second time that exact trap has
+cost a session here (`check_glb.py` and the inverse bind matrices was the first).
 
-## What was fixed, and what is still open - PARTIAL
+The check that actually works ignores ordering and offsets entirely: take the merged
+GLB and the target parent's own export, reduce both to a multiset of
+`(bone, bone-local position)`, and ask what fraction of the merge's vertices exist in
+the target at all. At weight 4096 the answer must be 100%.
 
-`blend_rest_pose` now also blends the bind rotations (shortest way round, since 4096
-units is a full turn) and the frame-0 root translation that drives bone 1. That makes
-the blend exact at weight 0, removes the shattering, and leaves the skeleton bone-for-bone
-identical to the target parent at weight 4096.
+| | before | after |
+|---|---|---|
+| 0% blend, vertices found in real 833 | 100.0% | 100.0% |
+| 100% blend, vertices found in real 867 | **23.5%** | **100.0%** |
 
-It is **not** a complete fix. At full weight the result still is not the target model,
-because the merged package keeps the base's UVs, texture page assignments and seam
-stitch records while taking the other parent's positions. Limbs then close against the
-wrong stitch partners. Judged against the target parent's own export, 64% of vertices
-are still misplaced, worst case a quarter of the model's span.
+The fix deletes `SVEC_RUN` rather than correcting it. `blend_mesh` now walks
+`export_mesh.GEOM` and `NORMALS`, so the bytes the blend writes and the bytes the
+exporter reads are the same set by construction and cannot drift apart again.
 
-So `merge_reference.py` now measures the divergence up front and prints a warning past
-15 degrees (`REST_POSE_LIMIT`). `models/merged/` only ships pairs that pass. A real fix
-has to blend the stitch records and UVs as well, or drop the "keep the base's clips"
-rule and synthesise a single pose the way the game does.
+## The bind pose is offsets AND rotations - CONFIRMED, FIXED
+
+Found while chasing the above, and real in its own right. `export_gltf` builds the bind
+pose from the rest offsets **and the first block's frame-0 rotations**, but
+`blend_rest_pose` blended only the offsets, so a merged skeleton kept the base parent's
+default angles. It also left bone 1 alone, which the renderer drives from the frame's
+second leading entry rather than from its rest offset, so everything below bone 1
+shifted as a block.
+
+`blend_rest_pose` now blends the bind rotations too, shortest way round - 4096 units is
+a full turn, so a plain average of 10 and 4090 swings the bone the long way - along with
+that root translation. At weight 4096 the merged skeleton is now identical to the target
+parent's, bone for bone, in both translation and rotation.
+
+## A wrong theory, recorded so nobody re-runs it - NEGATIVE RESULT
+
+Between those two, a whole diagnosis was built and discarded: that the damage came from
+parents whose **rest poses diverge**, since 833 and 867 hold every bone within 4 degrees
+of each other while 833 and 864 differ by 55 and 833 and 899 by 179. It fit the evidence
+available at the time, and a `REST_POSE_LIMIT` warning was added on the strength of it.
+
+It was wrong. With the byte offsets fixed, a 179-degree pair blends to a 100% vertex
+match like any other, and the warning has been removed. Rest-pose divergence is a real
+property of the family and it is worth knowing about, but it never caused this. The
+tell should have been that the corruption scaled with blend weight rather than with the
+angle between the parents.
 
 ## check_anim.py, and a metric that did not work - NEGATIVE RESULT
 
-`check_anim.py` was written to catch this class of bug: it walks every clip, skins the
-mesh on the CPU and measures how far each triangle edge stretches from its bind length.
-Worth recording that **an absolute threshold does not work here**. The known-good models
-in `models/current/` reach 3.2x to 4.6x on their own, because a seam strip spanning two
-bones really does stretch when a limb bends, so any cutoff loose enough to admit them is
-too loose to catch real damage. The tool therefore reports the number and compares
-against a `--baseline` model instead of pretending to a verdict.
+`check_anim.py` walks every clip, skins the mesh on the CPU and measures how far each
+triangle edge stretches from its bind length. Worth recording that **an absolute
+threshold does not work here**: the known-good models in `models/current/` reach 3.2x to
+4.6x on their own, because a seam strip spanning two bones really does stretch when a
+limb bends, so any cutoff loose enough to admit them is too loose to catch damage. It
+reports the number and compares against a `--baseline` model instead of pretending to a
+verdict.
 
-It also would not have caught this particular bug, which is visible in the bind pose
-itself. It stays because the blind spot it covers is real.
-
+It also would not have caught this bug, which is plain in the bind pose. It stays because
+the blind spot it covers - `check_glb.py` validates only the bind pose, where every skin
+matrix is the identity and any rig looks correct - is real.
 
 # 12. AGE / GROWTH — what is already known, for the next session
 

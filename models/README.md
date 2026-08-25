@@ -8,22 +8,23 @@ produce byte-comparable output.
 | folder | what |
 |--------|------|
 | `current/` | **the live export.** 102 rigged/animated/textured GLB + 4 unrigged OBJ, one `.appearance.json` per model that has a blob, and `export_report.json`. Everything is named `jc_NNNN_<Creature>` — see "Naming" below |
-| `merged/` | demo output of `tools/merge_reference.py merge`: creatures that do not exist on the disc. A 0/25/50/75/100% sweep of 833 x 867, a three-parent blend, a texture swap plus 120-degree hue rotation, and 862 as base gaining its arms from 833. **Only parents whose rest poses agree are blended here** - see "A merge needs more than shared topology" below |
+| `merged/` | demo output of `tools/merge_reference.py merge`: creatures that do not exist on the disc. A 0/25/50/75/100% sweep of 833 x 867, a three-parent blend, a texture swap plus 120-degree hue rotation, 907 as base gaining its body parts from 833, and Arpatron x Skawasp, the pair that turned up the offset bug below |
 | `derived_experiment/` | five `jc_NNNN_<Creature>_derived.glb` built with a **synthesised** bone table for the models whose skeleton is not on the disc (870, 879, 893, 930, 841). An experiment to look at beside `current/`, not a replacement - the derivation recovers only 60-85% of parents on rigs we already have. See `docs/OVERLAYS.md` §7 |
 | `archive/` | **not committed.** Four superseded export generations (v0.0_first15, v0.1, v0.2, v0.4_streamed) plus one-off scratch evidence. Each is regenerable by checking out the matching tag and re-running the pipeline; what was wrong with each is in `docs/FINDINGS.md` and the session log in `docs/START_HERE.md` |
 
-## A merge needs more than shared topology
+## These were wrong until 2026-08-25
 
-49 models share a vertex order, which is what makes merging possible at all. They do
-**not** all share a rest pose, and a vertex means nothing without the bone it hangs off:
-833 and 867 hold every bone within 4 degrees of each other, but 833 and 864 differ by 55,
-and 833 and 899 by 179. Blending across that gap tears the skin off the skeleton.
+Every file in `merged/` before that date was built by a blend that wrote to the wrong
+byte offsets: it treated a primitive as a run of 8-byte vectors starting at the chunk,
+when the body actually starts 4 bytes in and the gouraud types stride 16 bytes per
+vertex. Every vertex was blended four bytes early and the output was geometry belonging
+to neither parent - recognisable in outline, shattered up close.
 
-`merge_reference.py` warns past 15 degrees and everything in `merged/` stays inside it.
-If you blend your own pair and the result looks shredded, check the warning first: it is
-almost certainly the rest pose, not the mesh. `docs/MERGE_ALGORITHM.md` has the full
-account under "Where the export blend stops being trustworthy", including what is fixed
-and what is still wrong.
+A blend is now checked by reducing it and the target parent to multisets of
+`(bone, bone-local position)`: at 100% weight every vertex of the merge must exist in
+the target. It does. Before the fix it was 23.5%. The account is in
+`docs/MERGE_ALGORITHM.md` under "The merge export was blending the wrong bytes",
+including the check that passed while the output was broken.
 
 ## Naming
 

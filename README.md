@@ -113,17 +113,6 @@ mesh was tried and is not good enough. [docs/OVERLAYS.md](docs/OVERLAYS.md) §7 
 detail, and `models/derived_experiment/` has the attempt. If you want to contribute
 something valuable, this is the thread.
 
-And one in the merge exporter:
-
-- **Merging two creatures whose rest poses disagree distorts the result.** The models in
-  the morph family share a vertex order but not a default pose, and a vertex is stored
-  relative to its bone. `merge_reference.py` now blends the bind rotations too and warns
-  when the parents are more than 15 degrees apart, which is enough to keep the output
-  coherent, but a full-weight blend still is not identical to the target parent because
-  the UVs and seam stitch records stay with the base. Only 12 of the family are close
-  enough to 833 to blend cleanly with it. Detail in
-  [docs/MERGE_ALGORITHM.md](docs/MERGE_ALGORITHM.md).
-
 ## Legal
 
 The game is Genki's. This repo documents its file formats and ships assets extracted from
