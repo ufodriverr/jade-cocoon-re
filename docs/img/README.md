@@ -10,6 +10,11 @@ not captured from the game. Nothing here needs a disc.
   same rig, the same clip and the same frame, with the camera locked to the union of all
   five bounding boxes. Only the geometry changes across the row.
 
+- `merge_studio_age.png` - one merged creature (Arpatron x Skawasp) at levels 1, 7, 13, 22
+  and 40, captured from the live `tools/merge_studio.py` with the camera held still so the
+  size change is real. This one DOES need a disc, because the growth stages only exist in
+  the live tool; the exported models are all adults.
+
 To regenerate: serve the repo root, open `/viewer/`, and drive the page from the browser
 console. Select a model, pose it, set `S.cam`, call `draw()`, then copy the WebGL canvas
 into a 2D canvas tile with `drawImage`. The viewer keeps `preserveDrawingBuffer: true`

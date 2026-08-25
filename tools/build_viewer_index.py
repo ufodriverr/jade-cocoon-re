@@ -20,8 +20,9 @@ import sys
 
 FOLDERS = [
     ("current", "Disc export", "Straight off the disc: every model the game ships."),
-    ("merged", "Merged", "Creatures that do not exist on the disc, blended by "
-                         "merge_reference.py from two or three parents."),
+    ("merged", "Merged", "Creatures that do not exist on the disc. Already blended and "
+                         "written out - this viewer only plays them back. To mix two "
+                         "creatures live, run tools/merge_studio.py against your disc."),
     ("derived_experiment", "Derived rigs", "Five models rebuilt on a synthesised "
                                            "skeleton. An experiment, not a fix."),
 ]

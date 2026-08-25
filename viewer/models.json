@@ -13100,7 +13100,7 @@
      "verts": 1576
     }
    ],
-   "note": "Creatures that do not exist on the disc, blended by merge_reference.py from two or three parents."
+   "note": "Creatures that do not exist on the disc. Already blended and written out - this viewer only plays them back. To mix two creatures live, run tools/merge_studio.py against your disc."
   },
   {
    "dir": "../models/derived_experiment",

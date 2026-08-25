@@ -12,6 +12,11 @@ produce byte-comparable output.
 | `derived_experiment/` | five `jc_NNNN_<Creature>_derived.glb` built with a **synthesised** bone table for the models whose skeleton is not on the disc (870, 879, 893, 930, 841). An experiment to look at beside `current/`, not a replacement - the derivation recovers only 60-85% of parents on rigs we already have. See `docs/OVERLAYS.md` §7 |
 | `archive/` | **not committed.** Four superseded export generations (v0.0_first15, v0.1, v0.2, v0.4_streamed) plus one-off scratch evidence. Each is regenerable by checking out the matching tag and re-running the pipeline; what was wrong with each is in `docs/FINDINGS.md` and the session log in `docs/START_HERE.md` |
 
+These are static output. The tool that produces them, and lets you blend any two creatures
+live on a slider with an age and a palette control, is `tools/merge_studio.py` - see
+"Merge two creatures yourself" in the top-level README. It needs your own disc; these files
+do not.
+
 ## These were wrong until 2026-08-25
 
 Every file in `merged/` before that date was built by a blend that wrote to the wrong

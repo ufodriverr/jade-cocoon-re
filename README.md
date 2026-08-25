@@ -52,6 +52,10 @@ Then open <http://localhost:8000/viewer/>. Pick a creature from the list, scrub 
 animations, toggle the skeleton, wireframe and the body parts the game hides. It parses the
 GLBs itself with raw WebGL, so there is nothing to install and nothing phones home.
 
+This is a **viewer**, not a merger. Its "Merged" tab holds files that were already blended
+and written out by `merge_reference.py`; nothing in the browser is doing the blending. To
+mix two creatures yourself, and watch it happen, use Merge Studio below.
+
 ### Open them in Blender
 
 Drag any file from [`models/current/`](models/current) into Blender. They are ordinary
@@ -59,6 +63,37 @@ glTF binaries: rigged, skinned, textured, with every animation as a named action
 with `jc_0845_Marrdreg.glb`. [models/README.md](models/README.md) explains the naming and
 the layout, including the `hidden_*` node groups that hold body parts the game does not
 draw but a merge can switch back on.
+
+### Merge two creatures yourself (Merge Studio)
+
+The interactive one, and the only place the merge actually runs live. It needs your own
+disc, because it reads the geometry, skeletons, animations and palettes straight out of it
+and ships no game data of its own.
+
+```bash
+cd tools
+python merge_studio.py ../extracted/SLES_022.01 ../extracted/DATA001_split --open
+```
+
+That serves a page on <http://127.0.0.1:8765/>. Pick a base creature on the left and a
+material creature on the right, by name, out of the game's own 209-species roster. Then:
+
+- **Blend** slides 0 to 100% and the creature morphs as you drag, animated, per vertex, in
+  the same fixed-point arithmetic the PS1 used. The browser does the blending itself.
+- **Age** runs level 1 to 40, which picks one of five growth stages and applies that
+  stage's whole-body and per-bone scale ladders.
+- **Palette** rotates the hue the way an elemental tally does, and you can take the texture
+  from either parent.
+- Body-part chips show which limb groups the merge switched on, since a wingless parent
+  merged with a winged one gains wings.
+- **export .glb** writes the result out, and that is exactly what `models/merged/` holds.
+
+![One merged creature at five growth stages](docs/img/merge_studio_age.png)
+
+The age ladder above is Arpatron merged with Skawasp, the same creature at levels 1, 7, 13,
+22 and 40 with the camera held still. Babies are not just smaller, they are re-proportioned:
+the head keeps much more of its adult size than the body does. None of that is in the
+exported files, which are all adults, so it is only visible in the live tool.
 
 ### Rebuild everything from your own disc
 
