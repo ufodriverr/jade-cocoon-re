@@ -104,6 +104,8 @@ def slot_inherit(base_slots, material_slots):
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
+DEFAULT_RIG = 0x80079064       # the 25-bone table the whole morph family uses
+REST_POSE_LIMIT = 15           # degrees; past this a blend stops being meaningful
 EXE_LOAD = 0x80010000          # PS-X EXE t_addr; file offset = 0x800 + (addr - t_addr)
 SPECIES_TABLE = 0x8007BC54     # SpeciesRec[365]      (FUN_80019C70)
 SPECIES_SPAN = 365             # up to the growth-stage thresholds at 0x8007C208
@@ -364,6 +366,41 @@ def lerp_svec(dst, src, w):
     return out
 
 
+def rest_pose_divergence(srcs, anim_secs):
+    """Largest angle, in degrees, by which each source's rest pose differs from the
+    base's.
+
+    Vertices are stored per bone and relative to that bone, so a blend only means
+    something if the parents hold their skeletons at roughly the same default
+    angles. Inside the morph family most pairs do - 833 and 867 agree to within 4
+    degrees - but some are far apart: 833 and 864 differ by 55, and blending those
+    two produces geometry that no single skeleton can carry. See
+    MERGE_ALGORITHM.md, "Where the export blend stops being trustworthy".
+    """
+    import anim as animmod
+    out = []
+    blks = []
+    for i, s_ in enumerate(srcs):
+        c = animmod.parse_container(s_, anim_secs[i] * 2048)
+        blks.append(c[0] if c else None)
+    if blks[0] is None:
+        return [0.0] * len(srcs)
+    nb = min(b["bones"] for b in blks if b is not None)
+    for i in range(len(srcs)):
+        if blks[i] is None or i == 0:
+            out.append(0.0)
+            continue
+        worst = 0
+        for b in range(nb):
+            a = animmod.keyframe(srcs[0], blks[0], 0, b)
+            c = animmod.keyframe(srcs[i], blks[i], 0, b)
+            for k in range(3):
+                d = abs(((c[k] - a[k] + 0x800) & 0xFFF) - 0x800)
+                worst = max(worst, d)
+        out.append(worst * 360.0 / 4096.0)
+    return out
+
+
 def blend_run(buf, dst_off, src, src_off, run, w):
     """Blend one primitive's SVECTOR run in place inside `buf`."""
     first, count = run
@@ -469,6 +506,40 @@ def blend_rest_pose(out, srcs, anim_secs, weights, slots=()):
         base = blk["off"] + 8 + (4 if blk.get("extra") else 0)
         for b in range(min(nb, blk["bones"])):
             struct.pack_into("<3h", out, base + b * 6, *blended[b])
+
+    # The bind pose is the rest offsets AND the first block's frame-0 rotations -
+    # export_gltf builds it from exactly those - so blending only the offsets
+    # leaves the merged geometry hung on the base's default angles. Parents in
+    # this family can hold the same bone 55 degrees apart, which peels the skin
+    # off the skeleton. Blend the bind rotations to match. The clips still carry
+    # the base's motion from frame 1 on, as the docstring above says.
+    first = blocks[0] if blocks else None
+    if first is not None:
+        nbones = min(nb, first["bones"])
+        rot0 = [[animmod.keyframe(srcs[i], firsts[i], 0, b)
+                 if b < firsts[i]["bones"] else (0, 0, 0) for b in range(nbones)]
+                for i in range(3)]
+        frame0 = first["off"] + first["hdr"]
+        # Bone 1 does not use its rest offset: the renderer drives it from the
+        # frame's second leading entry. Leaving that at the base's value shifts
+        # everything below bone 1 as one block, so blend it like any other offset.
+        roots = [animmod.root_translation(srcs[i], firsts[i], 0) for i in range(3)]
+        struct.pack_into("<3h", out, frame0 + 6,
+                         *[_clamp16(sum(roots[i][c] * weights[i]
+                                        for i in range(3)) >> 12) for c in range(3)])
+        rbase = frame0 + 2 * 6
+        for b in range(nbones):
+            triple = []
+            for c in range(3):
+                a = rot0[0][b][c]
+                acc = 0
+                for i in range(3):
+                    # Shortest way round: 4096 units is a full turn, so a plain
+                    # average of 10 and 4090 would swing the bone the long way.
+                    d = ((rot0[i][b][c] - a + 0x800) & 0xFFF) - 0x800
+                    acc += d * weights[i]
+                triple.append(_clamp16(a + (acc >> 12)))
+            struct.pack_into("<3h", out, rbase + b * 6, *triple)
     return len(blocks)
 
 
@@ -623,8 +694,16 @@ def build_merged_package(exe, split_dir, sources, weights, stage,
         st = app["stages"][stage] if app and stage < len(app["stages"]) else None
         stage_w.append(st["meshWeights"] if st else None)
 
+    div = rest_pose_divergence(srcs, anim_secs)
     blend_mesh(out, srcs, mesh_secs, stage_w, weights)
     notes.append("mesh blended from files %s at weights %s" % (sources, weights))
+    for i, deg in enumerate(div):
+        if i and weights[i] and deg > REST_POSE_LIMIT:
+            notes.append("WARNING: file %d holds a bone %.0f degrees away from the "
+                         "base's rest pose. Past about %d degrees the parents no "
+                         "longer share a frame of reference and the blend distorts; "
+                         "see MERGE_ALGORITHM.md."
+                         % (sources[i], deg, REST_POSE_LIMIT))
 
     if blend_pose:
         n = blend_rest_pose(out, srcs, anim_secs, weights, slots)
@@ -654,9 +733,11 @@ def build_merged_package(exe, split_dir, sources, weights, stage,
 
 
 def export_glb(exe_path, pkg_bytes, mesh_sec, anim_sec, tex_sec, out_glb,
-               rig="0x80079064", slots=(), name="merged_"):
+               rig=None, slots=(), name="merged_"):
     """Hand the merged package to the normal exporter."""
     import sys
+    if rig is None:
+        rig = "0x%08X" % DEFAULT_RIG
     tmp = out_glb + ".pkg"
     with open(tmp, "wb") as fh:
         fh.write(pkg_bytes)

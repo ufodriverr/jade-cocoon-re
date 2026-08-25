@@ -47,7 +47,8 @@ thing; everything else on this page is a component of it or a way of looking at 
 | `export_all.py` | the older 16-model path, driven off the exe descriptor table alone |
 | `export_derived.py` | the five models with no skeleton on the disc, on a **derived** bone table. An experiment |
 | `assemble_model.py` | full skeletal assembly to a posed OBJ: hierarchy, rest pose, rotations |
-| `check_glb.py` | validate a GLB: structure, accessor bounds, skin sanity, and the skinning result |
+| `check_glb.py` | validate a GLB: structure, accessor bounds, skin sanity, and the skinning result. Checks the **bind pose** only |
+| `check_anim.py` | validate a GLB **under animation**, which `check_glb.py` cannot: at bind pose every skin matrix is the identity, so a rig that disagrees with its geometry still looks perfect. Reports worst edge stretch per clip; pass `--baseline` a known-good model to compare against |
 | `preview_obj.py` | render an OBJ to PNG with a tiny z-buffered rasteriser, no deps |
 | `build_viewer_index.py` | regenerate `viewer/models.json` after re-exporting |
 

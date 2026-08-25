@@ -1110,6 +1110,85 @@ party would settle it in a minute.
 
 ---
 
+# WHERE THE EXPORT BLEND STOPS BEING TRUSTWORTHY (2026-08-25, later still)
+
+## The rest pose is half the blend - CONFIRMED
+
+A user merged Arpatron with Skawasp in Merge Studio, exported the GLB, and got a
+creature whose skin had come off its skeleton: the silhouette was roughly right and
+the surface was a fan of long thin shards. The live tool looked fine; only the export
+was wrong. Everything obvious checked out and had to be eliminated one at a time:
+
+- the blended mesh is **byte-exact**. At weight 4096 all 2,889 SVECTOR slots equal the
+  source model's own, seam pools included.
+- the rest-offset blend is right, the bone hierarchy is identical across the family,
+  the mesh-object headers match, the per-mesh-object stage weights agree, the
+  appearance blob's per-bone scales are all identity at stage 4, and every one of these
+  models uses the same 25-bone table at `0x80079064`.
+- `check_glb.py` passes the broken file, because it only checks the **bind pose**, and
+  at bind pose every skin matrix is `world(joint) * inverseBind(joint) = identity`. A
+  rig that disagrees with its geometry still looks perfect there.
+
+The cause is that **a vertex is stored per bone and relative to that bone**, so what
+its numbers mean depends on where the bone is pointing in the rest pose. `export_gltf`
+builds the bind pose from the rest offsets **and the first block's frame-0 rotations**.
+Blending only the offsets, as the exporter used to, leaves the blended geometry hanging
+on the base parent's default angles.
+
+How far apart two parents hold the same bone decides how badly that shows:
+
+| pair | worst bone | result |
+|------|-----------|--------|
+| 833 x 867 | 3.6 deg | fine; this was the demo pair, which is why the bug hid |
+| 833 x 850 | 0.0 deg | fine |
+| 833 x 862 | 4.1 deg | fine |
+| 833 x 845 | 15.6 deg | visibly distorted |
+| 833 x 860 | 28.1 deg | distorted |
+| 833 x 907 | 45.4 deg | badly distorted |
+| 833 x 864 | 55.1 deg | the reported break |
+| 833 x 899 | 179.4 deg | nothing survives |
+
+**Only 12 of the 25-mesh family are within 15 degrees of 833.** Sharing a topology is
+not the same as sharing a pose, and the "49 models are each other's morph targets"
+result is about topology alone.
+
+The game never hits this. It builds a fresh single-frame pose for the merged creature,
+so its skeleton and its geometry always agree. An export is different: it keeps one
+parent's whole clip set so that all 29 animations still play, which pins the skeleton
+to that parent.
+
+## What was fixed, and what is still open - PARTIAL
+
+`blend_rest_pose` now also blends the bind rotations (shortest way round, since 4096
+units is a full turn) and the frame-0 root translation that drives bone 1. That makes
+the blend exact at weight 0, removes the shattering, and leaves the skeleton bone-for-bone
+identical to the target parent at weight 4096.
+
+It is **not** a complete fix. At full weight the result still is not the target model,
+because the merged package keeps the base's UVs, texture page assignments and seam
+stitch records while taking the other parent's positions. Limbs then close against the
+wrong stitch partners. Judged against the target parent's own export, 64% of vertices
+are still misplaced, worst case a quarter of the model's span.
+
+So `merge_reference.py` now measures the divergence up front and prints a warning past
+15 degrees (`REST_POSE_LIMIT`). `models/merged/` only ships pairs that pass. A real fix
+has to blend the stitch records and UVs as well, or drop the "keep the base's clips"
+rule and synthesise a single pose the way the game does.
+
+## check_anim.py, and a metric that did not work - NEGATIVE RESULT
+
+`check_anim.py` was written to catch this class of bug: it walks every clip, skins the
+mesh on the CPU and measures how far each triangle edge stretches from its bind length.
+Worth recording that **an absolute threshold does not work here**. The known-good models
+in `models/current/` reach 3.2x to 4.6x on their own, because a seam strip spanning two
+bones really does stretch when a limb bends, so any cutoff loose enough to admit them is
+too loose to catch real damage. The tool therefore reports the number and compares
+against a `--baseline` model instead of pretending to a verdict.
+
+It also would not have caught this particular bug, which is visible in the bind pose
+itself. It stays because the blind spot it covers is real.
+
+
 # 12. AGE / GROWTH — what is already known, for the next session
 
 Not the open thread's write-up, a **head start on it**. Most of the machinery turned up

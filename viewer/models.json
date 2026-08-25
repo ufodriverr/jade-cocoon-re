@@ -12078,28 +12078,28 @@
        "name": "merged_pose01_1f"
       },
       {
-       "frames": 30,
-       "name": "merged_anim02_30f"
+       "frames": 40,
+       "name": "merged_anim02_40f"
       },
       {
-       "frames": 30,
-       "name": "merged_anim03_30f"
+       "frames": 20,
+       "name": "merged_anim03_20f"
       },
       {
-       "frames": 55,
-       "name": "merged_anim04_55f"
+       "frames": 40,
+       "name": "merged_anim04_40f"
       },
       {
        "frames": 40,
        "name": "merged_anim05_40f"
       },
       {
-       "frames": 60,
-       "name": "merged_anim06_60f"
+       "frames": 55,
+       "name": "merged_anim06_55f"
       },
       {
-       "frames": 30,
-       "name": "merged_anim07_30f"
+       "frames": 20,
+       "name": "merged_anim07_20f"
       },
       {
        "frames": 1,
@@ -12110,52 +12110,52 @@
        "name": "merged_pose09_1f"
       },
       {
-       "frames": 30,
-       "name": "merged_anim10_30f"
+       "frames": 40,
+       "name": "merged_anim10_40f"
       },
       {
-       "frames": 30,
-       "name": "merged_anim11_30f"
+       "frames": 20,
+       "name": "merged_anim11_20f"
       },
       {
-       "frames": 55,
-       "name": "merged_anim12_55f"
+       "frames": 40,
+       "name": "merged_anim12_40f"
       },
       {
        "frames": 55,
        "name": "merged_anim13_55f"
       },
       {
-       "frames": 52,
-       "name": "merged_anim14_52f"
+       "frames": 55,
+       "name": "merged_anim14_55f"
       },
       {
-       "frames": 50,
-       "name": "merged_anim15_50f"
+       "frames": 65,
+       "name": "merged_anim15_65f"
       },
       {
-       "frames": 50,
-       "name": "merged_anim16_50f"
+       "frames": 55,
+       "name": "merged_anim16_55f"
       },
       {
-       "frames": 45,
-       "name": "merged_anim17_45f"
+       "frames": 60,
+       "name": "merged_anim17_60f"
       },
       {
        "frames": 80,
        "name": "merged_anim18_80f"
       },
       {
-       "frames": 66,
-       "name": "merged_anim19_66f"
+       "frames": 100,
+       "name": "merged_anim19_100f"
       },
       {
        "frames": 30,
        "name": "merged_anim20_30f"
       },
       {
-       "frames": 48,
-       "name": "merged_anim21_48f"
+       "frames": 80,
+       "name": "merged_anim21_80f"
       },
       {
        "frames": 120,
@@ -12166,20 +12166,20 @@
        "name": "merged_anim23_40f"
       },
       {
-       "frames": 40,
-       "name": "merged_anim24_40f"
+       "frames": 51,
+       "name": "merged_anim24_51f"
       },
       {
-       "frames": 65,
-       "name": "merged_anim25_65f"
+       "frames": 74,
+       "name": "merged_anim25_74f"
       },
       {
-       "frames": 60,
-       "name": "merged_anim26_60f"
+       "frames": 55,
+       "name": "merged_anim26_55f"
       },
       {
-       "frames": 30,
-       "name": "merged_anim27_30f"
+       "frames": 20,
+       "name": "merged_anim27_20f"
       },
       {
        "frames": 70,
@@ -12187,12 +12187,12 @@
       }
      ],
      "bones": 25,
-     "file": "merge_907base_x833_gainsparts.glb",
+     "file": "merge_862base_x833_gainsarms.glb",
      "hidden": [],
-     "name": "merge 907base x833 gainsparts",
+     "name": "merge 862base x833 gainsarms",
      "prims": 3,
      "static": false,
-     "stem": "merge_907base_x833_gainsparts",
+     "stem": "merge_862base_x833_gainsarms",
      "textures": 2,
      "verts": 1576
     },
@@ -12316,272 +12316,12 @@
       }
      ],
      "bones": 25,
-     "file": "merge_three_833_860_867.glb",
+     "file": "merge_three_833_862_867.glb",
      "hidden": [],
-     "name": "merge three 833 860 867",
+     "name": "merge three 833 862 867",
      "prims": 3,
      "static": false,
-     "stem": "merge_three_833_860_867",
-     "textures": 2,
-     "verts": 1576
-    },
-    {
-     "anims": [
-      {
-       "frames": 1,
-       "name": "merged_pose00_1f"
-      },
-      {
-       "frames": 1,
-       "name": "merged_pose01_1f"
-      },
-      {
-       "frames": 36,
-       "name": "merged_anim02_36f"
-      },
-      {
-       "frames": 60,
-       "name": "merged_anim03_60f"
-      },
-      {
-       "frames": 70,
-       "name": "merged_anim04_70f"
-      },
-      {
-       "frames": 45,
-       "name": "merged_anim05_45f"
-      },
-      {
-       "frames": 60,
-       "name": "merged_anim06_60f"
-      },
-      {
-       "frames": 30,
-       "name": "merged_anim07_30f"
-      },
-      {
-       "frames": 1,
-       "name": "merged_pose08_1f"
-      },
-      {
-       "frames": 1,
-       "name": "merged_pose09_1f"
-      },
-      {
-       "frames": 36,
-       "name": "merged_anim10_36f"
-      },
-      {
-       "frames": 60,
-       "name": "merged_anim11_60f"
-      },
-      {
-       "frames": 70,
-       "name": "merged_anim12_70f"
-      },
-      {
-       "frames": 36,
-       "name": "merged_anim13_36f"
-      },
-      {
-       "frames": 40,
-       "name": "merged_anim14_40f"
-      },
-      {
-       "frames": 55,
-       "name": "merged_anim15_55f"
-      },
-      {
-       "frames": 39,
-       "name": "merged_anim16_39f"
-      },
-      {
-       "frames": 50,
-       "name": "merged_anim17_50f"
-      },
-      {
-       "frames": 80,
-       "name": "merged_anim18_80f"
-      },
-      {
-       "frames": 55,
-       "name": "merged_anim19_55f"
-      },
-      {
-       "frames": 30,
-       "name": "merged_anim20_30f"
-      },
-      {
-       "frames": 35,
-       "name": "merged_anim21_35f"
-      },
-      {
-       "frames": 120,
-       "name": "merged_anim22_120f"
-      },
-      {
-       "frames": 45,
-       "name": "merged_anim23_45f"
-      },
-      {
-       "frames": 45,
-       "name": "merged_anim24_45f"
-      },
-      {
-       "frames": 66,
-       "name": "merged_anim25_66f"
-      },
-      {
-       "frames": 60,
-       "name": "merged_anim26_60f"
-      },
-      {
-       "frames": 30,
-       "name": "merged_anim27_30f"
-      },
-      {
-       "frames": 70,
-       "name": "merged_anim28_70f"
-      }
-     ],
-     "bones": 25,
-     "file": "studio_Marrdreg_x_Raddreg_50_hue170.glb",
-     "hidden": [
-      "wings"
-     ],
-     "name": "studio Marrdreg x Raddreg 50 hue170",
-     "prims": 4,
-     "static": false,
-     "stem": "studio_Marrdreg_x_Raddreg_50_hue170",
-     "textures": 2,
-     "verts": 1576
-    },
-    {
-     "anims": [
-      {
-       "frames": 1,
-       "name": "merged_pose00_1f"
-      },
-      {
-       "frames": 1,
-       "name": "merged_pose01_1f"
-      },
-      {
-       "frames": 36,
-       "name": "merged_anim02_36f"
-      },
-      {
-       "frames": 60,
-       "name": "merged_anim03_60f"
-      },
-      {
-       "frames": 70,
-       "name": "merged_anim04_70f"
-      },
-      {
-       "frames": 45,
-       "name": "merged_anim05_45f"
-      },
-      {
-       "frames": 60,
-       "name": "merged_anim06_60f"
-      },
-      {
-       "frames": 30,
-       "name": "merged_anim07_30f"
-      },
-      {
-       "frames": 1,
-       "name": "merged_pose08_1f"
-      },
-      {
-       "frames": 1,
-       "name": "merged_pose09_1f"
-      },
-      {
-       "frames": 36,
-       "name": "merged_anim10_36f"
-      },
-      {
-       "frames": 60,
-       "name": "merged_anim11_60f"
-      },
-      {
-       "frames": 70,
-       "name": "merged_anim12_70f"
-      },
-      {
-       "frames": 36,
-       "name": "merged_anim13_36f"
-      },
-      {
-       "frames": 40,
-       "name": "merged_anim14_40f"
-      },
-      {
-       "frames": 55,
-       "name": "merged_anim15_55f"
-      },
-      {
-       "frames": 39,
-       "name": "merged_anim16_39f"
-      },
-      {
-       "frames": 50,
-       "name": "merged_anim17_50f"
-      },
-      {
-       "frames": 80,
-       "name": "merged_anim18_80f"
-      },
-      {
-       "frames": 55,
-       "name": "merged_anim19_55f"
-      },
-      {
-       "frames": 30,
-       "name": "merged_anim20_30f"
-      },
-      {
-       "frames": 35,
-       "name": "merged_anim21_35f"
-      },
-      {
-       "frames": 120,
-       "name": "merged_anim22_120f"
-      },
-      {
-       "frames": 45,
-       "name": "merged_anim23_45f"
-      },
-      {
-       "frames": 45,
-       "name": "merged_anim24_45f"
-      },
-      {
-       "frames": 66,
-       "name": "merged_anim25_66f"
-      },
-      {
-       "frames": 60,
-       "name": "merged_anim26_60f"
-      },
-      {
-       "frames": 30,
-       "name": "merged_anim27_30f"
-      },
-      {
-       "frames": 70,
-       "name": "merged_anim28_70f"
-      }
-     ],
-     "bones": 25,
-     "file": "studio_Pataraid_x_Skawasp_50_hue310.glb",
-     "hidden": [],
-     "name": "studio Pataraid x Skawasp 50 hue310",
-     "prims": 3,
-     "static": false,
-     "stem": "studio_Pataraid_x_Skawasp_50_hue310",
+     "stem": "merge_three_833_862_867",
      "textures": 2,
      "verts": 1576
     },

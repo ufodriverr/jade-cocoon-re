@@ -77,7 +77,7 @@ python iso_ls.py "/path/to/your/Jade Cocoon.bin" --json ../docs/iso_filelist.jso
 | folder | what |
 |--------|------|
 | [`docs/`](docs) | the research. `START_HERE.md` first, then `FINDINGS.md` for the full ledger. Every claim is marked CONFIRMED or HYPOTHESIS |
-| [`tools/`](tools) | 43 Python scripts, zero dependencies: ISO reader, archive splitter, texture and mesh and animation parsers, the model exporter, the merge reference implementation, the live merge studio, plus headless Ghidra scripts |
+| [`tools/`](tools) | 42 Python scripts, zero dependencies: ISO reader, archive splitter, texture and mesh and animation parsers, the model exporter, the merge reference implementation, the live merge studio, plus headless Ghidra scripts |
 | [`models/`](models) | the exported models. `current/` is the live export, `merged/` holds creatures that do not exist on the disc, `derived_experiment/` is an open problem |
 | [`viewer/`](viewer) | the browser viewer. One HTML file and a generated index |
 
@@ -112,6 +112,17 @@ Their real bone tables (24, 26 and 35 bones) are not on the disc. Deriving them 
 mesh was tried and is not good enough. [docs/OVERLAYS.md](docs/OVERLAYS.md) §7 has the
 detail, and `models/derived_experiment/` has the attempt. If you want to contribute
 something valuable, this is the thread.
+
+And one in the merge exporter:
+
+- **Merging two creatures whose rest poses disagree distorts the result.** The models in
+  the morph family share a vertex order but not a default pose, and a vertex is stored
+  relative to its bone. `merge_reference.py` now blends the bind rotations too and warns
+  when the parents are more than 15 degrees apart, which is enough to keep the output
+  coherent, but a full-weight blend still is not identical to the target parent because
+  the UVs and seam stitch records stay with the base. Only 12 of the family are close
+  enough to 833 to blend cleanly with it. Detail in
+  [docs/MERGE_ALGORITHM.md](docs/MERGE_ALGORITHM.md).
 
 ## Legal
 
