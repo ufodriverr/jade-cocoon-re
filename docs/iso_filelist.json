@@ -1,0 +1,155 @@
+{
+ "volume_id": "SLES-02201",
+ "files": [
+  {
+   "path": "/SLES_022.01",
+   "lba": 23,
+   "size": 765952
+  },
+  {
+   "path": "/SYSTEM.CNF",
+   "lba": 397,
+   "size": 68
+  },
+  {
+   "path": "/DATA/DATA.001",
+   "lba": 542,
+   "size": 211658752
+  },
+  {
+   "path": "/DATA/VOICE.XA",
+   "lba": 103891,
+   "size": 88670208
+  },
+  {
+   "path": "/MOVIE/LOGO.STR",
+   "lba": 147187,
+   "size": 2152448
+  },
+  {
+   "path": "/MOVIE/CRAVE.STR",
+   "lba": 148238,
+   "size": 4288512
+  },
+  {
+   "path": "/MOVIE/ENDING.STR",
+   "lba": 150332,
+   "size": 46673920
+  },
+  {
+   "path": "/MOVIE/STAFF.STR",
+   "lba": 173122,
+   "size": 40243200
+  },
+  {
+   "path": "/MOVIE/T1_0.STR",
+   "lba": 192772,
+   "size": 2105344
+  },
+  {
+   "path": "/MOVIE/T1_1.STR",
+   "lba": 193800,
+   "size": 2887680
+  },
+  {
+   "path": "/MOVIE/T1_2.STR",
+   "lba": 195210,
+   "size": 382976
+  },
+  {
+   "path": "/MOVIE/T2_1.STR",
+   "lba": 195397,
+   "size": 1675264
+  },
+  {
+   "path": "/MOVIE/T3_1.STR",
+   "lba": 196215,
+   "size": 2105344
+  },
+  {
+   "path": "/MOVIE/T4_1.STR",
+   "lba": 197243,
+   "size": 1720320
+  },
+  {
+   "path": "/MOVIE/T5_1.STR",
+   "lba": 198083,
+   "size": 1505280
+  },
+  {
+   "path": "/MOVIE/T5_2.STR",
+   "lba": 198818,
+   "size": 522240
+  },
+  {
+   "path": "/MOVIE/T6_1.STR",
+   "lba": 199073,
+   "size": 2334720
+  },
+  {
+   "path": "/MOVIE/T6_2.STR",
+   "lba": 200213,
+   "size": 505856
+  },
+  {
+   "path": "/MOVIE/T7_1.STR",
+   "lba": 200460,
+   "size": 3102720
+  },
+  {
+   "path": "/MOVIE/T7_2.STR",
+   "lba": 201975,
+   "size": 1472512
+  },
+  {
+   "path": "/MOVIE/T7_3.STR",
+   "lba": 202694,
+   "size": 1873920
+  },
+  {
+   "path": "/MOVIE/ARCA.STR",
+   "lba": 203609,
+   "size": 40413184
+  },
+  {
+   "path": "/MOVIE/YAMU.STR",
+   "lba": 223342,
+   "size": 10045440
+  },
+  {
+   "path": "/MOVIE/BIRD.STR",
+   "lba": 228247,
+   "size": 31627264
+  },
+  {
+   "path": "/MOVIE/GOD.STR",
+   "lba": 243690,
+   "size": 8955904
+  },
+  {
+   "path": "/MOVIE/NEA1.STR",
+   "lba": 248063,
+   "size": 3549184
+  },
+  {
+   "path": "/MOVIE/NEA2.STR",
+   "lba": 249796,
+   "size": 1964032
+  },
+  {
+   "path": "/MOVIE/NEB1.STR",
+   "lba": 250755,
+   "size": 12240896
+  },
+  {
+   "path": "/MOVIE/NEB2.STR",
+   "lba": 256732,
+   "size": 2119680
+  },
+  {
+   "path": "/MOVIE/OPEN.STR",
+   "lba": 257767,
+   "size": 44544000
+  }
+ ]
+}

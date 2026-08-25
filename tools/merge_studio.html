@@ -1,0 +1,670 @@
+<meta charset="utf-8">
+<title>Jade Cocoon — Merge Studio</title>
+<style>
+  :root{
+    --bg:#12100f; --panel:#1c1917; --line:#332e29; --ink:#e8e2d8; --dim:#9a8f82;
+    --accent:#c9a227; --accent2:#6ba368;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);
+    font:13px/1.45 ui-sans-serif,system-ui,"Segoe UI",sans-serif}
+  #app{display:grid;grid-template-columns:250px 1fr 250px;height:100%}
+  .side{background:var(--panel);border-right:1px solid var(--line);
+    display:flex;flex-direction:column;min-height:0}
+  .side.right{border-right:0;border-left:1px solid var(--line)}
+  .side h2{margin:0;padding:11px 12px 9px;font-size:11px;letter-spacing:.13em;
+    text-transform:uppercase;color:var(--dim);border-bottom:1px solid var(--line)}
+  .side h2 b{color:var(--accent);font-weight:600}
+  .filter{padding:8px 10px;border-bottom:1px solid var(--line)}
+  .filter input{width:100%;padding:6px 8px;border-radius:5px;border:1px solid var(--line);
+    background:#0e0c0b;color:var(--ink);font:inherit}
+  ul.list{list-style:none;margin:0;padding:4px 0;overflow-y:auto;flex:1;min-height:0}
+  ul.list li{padding:5px 12px;cursor:pointer;display:flex;justify-content:space-between;gap:8px}
+  ul.list li:hover{background:#262220}
+  ul.list li.sel{background:#3a2f14;color:#fff;box-shadow:inset 3px 0 0 var(--accent)}
+  ul.list li .sub{color:var(--dim);font-size:11px;font-variant-numeric:tabular-nums}
+  ul.list li.off{opacity:.35;cursor:not-allowed}
+  #stage{position:relative;min-width:0}
+  canvas{display:block;width:100%;height:100%;background:
+    radial-gradient(ellipse at 50% 40%,#241f1c 0%,#0d0b0a 75%)}
+  #hud{position:absolute;left:0;right:0;bottom:0;padding:12px 16px 14px;
+    background:linear-gradient(transparent,rgba(10,9,8,.93) 35%)}
+  .row{display:flex;align-items:center;gap:12px;margin-top:8px}
+  .row label{color:var(--dim);min-width:74px;font-size:11px;
+    letter-spacing:.08em;text-transform:uppercase}
+  input[type=range]{flex:1;accent-color:var(--accent)}
+  select,button{background:#0e0c0b;color:var(--ink);border:1px solid var(--line);
+    border-radius:5px;padding:5px 8px;font:inherit}
+  button{cursor:pointer}
+  button:hover{border-color:var(--accent)}
+  button.on{background:#3a2f14;border-color:var(--accent)}
+  .val{min-width:62px;text-align:right;font-variant-numeric:tabular-nums;color:var(--accent)}
+  #title{position:absolute;top:0;left:0;right:0;padding:12px 16px;
+    display:flex;justify-content:space-between;align-items:baseline;
+    background:linear-gradient(rgba(10,9,8,.9),transparent)}
+  #title .who{font-size:15px}
+  #title .who i{color:var(--dim);font-style:normal}
+  #title .meta{color:var(--dim);font-size:11px;font-variant-numeric:tabular-nums}
+  #err{position:absolute;inset:auto 16px 120px;padding:10px 12px;border-radius:6px;
+    background:#3a1414;border:1px solid #7a2b2b;display:none;white-space:pre-wrap}
+  .note{padding:9px 12px;color:var(--dim);font-size:11px;border-top:1px solid var(--line)}
+  .chips{display:flex;flex-wrap:wrap;gap:5px;padding:8px 10px}
+  .chip{border:1px solid var(--line);border-radius:99px;padding:2px 9px;font-size:11px;
+    color:var(--dim);cursor:pointer;user-select:none}
+  .chip.on{border-color:var(--accent2);color:#cfe6c8}
+  #busy{position:absolute;inset:0;display:none;place-items:center;
+    background:rgba(12,11,10,.66);font-size:12px;letter-spacing:.1em;color:var(--dim)}
+</style>
+
+<div id="app">
+  <div class="side">
+    <h2>Base — <b id="nameA">…</b></h2>
+    <div class="filter"><input id="filtA" placeholder="filter…"></div>
+    <ul class="list" id="listA"></ul>
+    <div class="note">Source 0. The result keeps this creature's UVs, seams and animations.</div>
+  </div>
+
+  <div id="stage">
+    <canvas id="gl"></canvas>
+    <div id="title">
+      <div class="who"><span id="whoA">–</span> <i>×</i> <span id="whoB">–</span></div>
+      <div class="meta" id="meta"></div>
+    </div>
+    <div id="busy">blending…</div>
+    <div id="err"></div>
+    <div id="hud">
+      <div class="row">
+        <label>Blend</label>
+        <input type="range" id="w" min="0" max="4096" value="2048">
+        <span class="val" id="wv">50 %</span>
+      </div>
+      <div class="row">
+        <label>Age</label>
+        <input type="range" id="lvl" min="1" max="40" value="40">
+        <span class="val" id="lvlv">lv 40</span>
+        <span class="val" id="stagev" style="min-width:104px">stage 5/5</span>
+      </div>
+      <div class="row">
+        <label>Palette</label>
+        <input type="range" id="hue" min="0" max="359" value="0">
+        <span class="val" id="huev">0°</span>
+        <select id="texsrc"><option value="a">texture: base</option>
+          <option value="b">texture: material</option></select>
+      </div>
+      <div class="row">
+        <label>Animation</label>
+        <select id="clip"></select>
+        <button id="play" class="on">⏸ pause</button>
+        <input type="range" id="frame" min="0" max="0" value="0" style="max-width:180px">
+        <span class="val" id="fv">0</span>
+        <button id="wire">wireframe</button>
+        <button id="reset">reset view</button>
+        <button id="glb">export .glb</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="side right">
+    <h2>Material — <b id="nameB">…</b></h2>
+    <div class="filter"><input id="filtB" placeholder="filter…"></div>
+    <ul class="list" id="listB"></ul>
+    <div class="chips" id="partchips"></div>
+    <div class="note">Body parts the merge switches on are the union of both parents.</div>
+  </div>
+</div>
+
+<script>
+"use strict";
+// ---------------------------------------------------------------- small utils
+const $ = s => document.querySelector(s);
+const b64 = (s, Type) => {
+  const bin = atob(s), buf = new ArrayBuffer(bin.length), u8 = new Uint8Array(buf);
+  for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+  return new Type(buf);
+};
+const showErr = m => { const e = $("#err"); e.style.display = "block"; e.textContent = m; };
+
+// The game's own sine table: round(sin(i * 2pi / 4096) * 4096), verified against the
+// exe entry by entry. Angles everywhere below are in these 4096-per-turn units.
+const SIN = new Int32Array(4096);
+for (let i = 0; i < 4096; i++) SIN[i] = Math.round(Math.sin(i * 2 * Math.PI / 4096) * 4096);
+const sin = a => SIN[a & 0xfff], cos = a => SIN[(a + 0x400) & 0xfff];
+
+// FUN_80047E4C's Euler triple -> 3x3, in 1.12 fixed point.
+function rotMatrix(a0, a1, a2) {
+  const s0 = sin(a0), c0 = cos(a0), s1 = sin(a1), c1 = cos(a1), s2 = sin(a2), c2 = cos(a2);
+  return [
+    (c2 * c1) >> 12, ((((c2 * s1) >> 12) * s0) >> 12) - ((s2 * c0) >> 12),
+    ((s2 * s0) >> 12) + ((((c2 * s1) >> 12) * c0) >> 12),
+    (s2 * c1) >> 12, ((c2 * c0) >> 12) + ((((s2 * s1) >> 12) * s0) >> 12),
+    ((((s2 * s1) >> 12) * c0) >> 12) - ((c2 * s0) >> 12),
+    -s1, (c1 * s0) >> 12, (c1 * c0) >> 12];
+}
+const mul3 = (a, b) => {
+  const o = new Array(9);
+  for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++)
+    o[r * 3 + c] = (a[r * 3] * b[c] + a[r * 3 + 1] * b[3 + c] + a[r * 3 + 2] * b[6 + c]) >> 12;
+  return o;
+};
+const apply3 = (m, x, y, z) => [(m[0] * x + m[1] * y + m[2] * z) >> 12,
+                                (m[3] * x + m[4] * y + m[5] * z) >> 12,
+                                (m[6] * x + m[7] * y + m[8] * z) >> 12];
+
+// ------------------------------------------------------------------- webgl
+const gl = $("#gl").getContext("webgl",
+  { antialias: true, alpha: false, preserveDrawingBuffer: true });
+if (!gl) showErr("This browser has no WebGL.");
+
+const VS = `
+attribute vec3 aPos; attribute vec3 aNrm; attribute vec2 aUV;
+attribute float aJoint; attribute float aPart;
+uniform mat4 uProj, uView;
+uniform vec4 uBone[100];        // 25 bones x (mat3 rows packed as 3 vec4 + translate)
+uniform float uPartOn[5];
+varying vec2 vUV; varying vec3 vN; varying float vDrop;
+void main(){
+  int j = int(aJoint + 0.5);
+  vec4 r0 = uBone[j*4], r1 = uBone[j*4+1], r2 = uBone[j*4+2], tr = uBone[j*4+3];
+  vec3 p = vec3(dot(r0.xyz,aPos), dot(r1.xyz,aPos), dot(r2.xyz,aPos)) + tr.xyz;
+  vec3 n = normalize(vec3(dot(r0.xyz,aNrm), dot(r1.xyz,aNrm), dot(r2.xyz,aNrm)));
+  vDrop = 1.0 - uPartOn[int(aPart + 0.5)];
+  vUV = aUV; vN = n;
+  gl_Position = uProj * uView * vec4(p, 1.0);
+}`;
+
+// The palette rotation is FUN_80029D68: quantise to the PS1's 5 bits, convert to the
+// game's 192-step HSV, add the delta, convert back. Greys have no hue and are skipped,
+// which is why a merged creature's whites and eyes stay put.
+const FS = `
+precision mediump float;
+varying vec2 vUV; varying vec3 vN; varying float vDrop;
+uniform sampler2D uTex; uniform float uUseTex, uHue, uWire;
+vec3 hueRot(vec3 c, float deg){
+  vec3 q = floor(c * 31.0 + 0.5);
+  float mx = max(q.r, max(q.g, q.b)), mn = min(q.r, min(q.g, q.b));
+  if (mx == 0.0) return c;
+  float s = floor((mx - mn) * 31.0 / mx);
+  if (s == 0.0) return c;                       // achromatic: left exactly alone
+  float d = mx - mn, h;
+  if (mx == q.g)      h = floor(((mx - q.r) - (mx - q.b)) * 32.0 / d) + 64.0;
+  else if (mx == q.r) h = floor(((mx - q.b) - (mx - q.g)) * 32.0 / d);
+  else                h = floor(((mx - q.g) - (mx - q.r)) * 32.0 / d) + 128.0;
+  if (h < 0.0) h += 192.0;
+  h = mod(h + floor(deg * 24.0 / 45.0), 192.0);
+  float sec = floor(h / 32.0), f = h - sec * 32.0, v = mx;
+  float p = floor((v * (992.0 - s * 32.0) + 496.0) / 992.0);
+  float qq = floor((v * (992.0 - s * f) + 496.0) / 992.0);
+  float t = floor((v * (992.0 - s * (32.0 - f)) + 496.0) / 992.0);
+  vec3 o;
+  if      (sec < 1.0) o = vec3(v, t, p);
+  else if (sec < 2.0) o = vec3(qq, v, p);
+  else if (sec < 3.0) o = vec3(p, v, t);
+  else if (sec < 4.0) o = vec3(p, qq, v);
+  else if (sec < 5.0) o = vec3(t, p, v);
+  else                o = vec3(v, p, qq);
+  return o / 31.0;
+}
+void main(){
+  if (vDrop > 0.5) discard;
+  vec4 c = uUseTex > 0.5 ? texture2D(uTex, vUV) : vec4(0.70, 0.70, 0.74, 1.0);
+  if (c.a < 0.5) discard;
+  if (uHue > 0.0) c.rgb = hueRot(c.rgb, uHue);
+  float lam = 0.42 + 0.58 * max(dot(normalize(vN), normalize(vec3(0.35, 0.75, 0.55))), 0.0);
+  gl_FragColor = uWire > 0.5 ? vec4(0.55, 0.85, 0.6, 1.0) : vec4(c.rgb * lam, 1.0);
+}`;
+
+function shader(type, src) {
+  const s = gl.createShader(type);
+  gl.shaderSource(s, src); gl.compileShader(s);
+  if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) showErr(gl.getShaderInfoLog(s));
+  return s;
+}
+const prog = gl.createProgram();
+gl.attachShader(prog, shader(gl.VERTEX_SHADER, VS));
+gl.attachShader(prog, shader(gl.FRAGMENT_SHADER, FS));
+gl.linkProgram(prog); gl.useProgram(prog);
+const A = n => gl.getAttribLocation(prog, n), U = n => gl.getUniformLocation(prog, n);
+const loc = { pos: A("aPos"), nrm: A("aNrm"), uv: A("aUV"), joint: A("aJoint"), part: A("aPart") };
+const uni = {
+  proj: U("uProj"), view: U("uView"), bone: U("uBone"), tex: U("uTex"),
+  useTex: U("uUseTex"), hue: U("uHue"), wire: U("uWire"), partOn: U("uPartOn"),
+};
+
+const buf = { pos: gl.createBuffer(), nrm: gl.createBuffer(), uv: gl.createBuffer(),
+              joint: gl.createBuffer(), part: gl.createBuffer(), idx: gl.createBuffer() };
+
+// ------------------------------------------------------------------- state
+const S = {
+  roster: [], a: null, b: null, data: null, textures: [], curTex: null,
+  weight: 2048, hue: 0, texsrc: "a", clip: 0, frame: 0, playing: true,
+  level: 40, stage: 4, mobj: null, ages: null,
+  wire: false, partOn: [1, 1, 1, 1, 1],
+  yaw: 0.6, pitch: 0.15, dist: 3.2, panY: 0,
+  pos: null, nrm: null, joint: null, part: null, nIdx: 0,
+  posA: null, posB: null, nrmA: null, nrmB: null,
+  restA: null, restB: null, rest: null, parents: null, selves: null,
+};
+
+// -------------------------------------------------------- the merge itself
+// FUN_80039FE8 + FUN_8003A6C8, folded: dst = (0x1000*a + w*(b-a)) >> 12, per component,
+// on the same s16 values the PS1 blends. Positions and normals both.
+function blend(dst, a, b, w, per, mobj) {
+  for (let i = 0; i < a.length; i++) {
+    const ww = per ? per[mobj[(i / 3) | 0]] : w;
+    let d = b[i] - a[i];
+    if (d > 32767) d = 32767; else if (d < -32768) d = -32768;
+    let v = (4096 * a[i] + ww * d) >> 12;
+    dst[i] = v > 32767 ? 32767 : (v < -32768 ? -32768 : v);
+  }
+}
+
+// ------------------------------------------------------------------- age
+// FUN_80019A80: a level is turned into one of five growth stages by counting how
+// many of five thresholds (1, 7, 13, 22, 27) it has passed. Everything a stage
+// carries - whole-body scale, per-bone scale, body-part flags, per-mesh weights -
+// lives in the model's appearance blob, one set per stage.
+function stageOf(level) {
+  const th = (S.ages && S.ages.thresholds) || [1, 7, 13, 22, 27];
+  let st = 0;
+  while (st < 5 && level >= th[st]) st++;
+  return Math.max(0, st - 1);
+}
+
+// FUN_80010DB0's per-mesh-object weight, cascading denominators and all. Only
+// three models in the whole game carry a non-zero value; where one does, the
+// normalisation collapses to 100% of the parent that carries it, so it is a
+// per-body-part OVERRIDE rather than a weight. Third source is a copy of the
+// base at weight 0, exactly as the merge job pads a two-parent recipe.
+function meshObjWeight(a, b, jw0, jw1) {
+  let w;
+  if (a === b) w = [jw0, jw1, 0];
+  else {
+    const t = a + b + a;
+    const a2 = Math.floor(a * 4096 / t);
+    const b2 = Math.floor(b * 4096 / (a2 + b + a));
+    w = [a2 * jw0, b2 * jw1, 0];
+  }
+  const out = [0, 0, 0];
+  for (let i = 0; i < 3; i++) {
+    const t = w[0] + w[1] + w[2];
+    if (!t) return 0;
+    out[i] = Math.floor(w[i] * 4096 / t);
+    w[i] = out[i];
+  }
+  return out[1];
+}
+
+// The two vectors the stage feeds the renderer: a whole-body scale, which the
+// merge blends across all five stages by the job weights, and a per-bone scale,
+// which it does NOT blend - FUN_8004A520 is called with a null output array, so
+// the result keeps the base's. Both are 1.12 fixed point; stage 4 is unity for
+// most models, which is why an adult looks exactly like the raw mesh.
+function ageVectors() {
+  if (!S.ages) { S.gScale = [4096, 4096, 4096]; S.bScale = null; return; }
+  const A = S.ages.a[S.stage], B = S.ages.b[S.stage], w = S.weight;
+  S.gScale = [0, 1, 2].map(i =>
+    ((A.scale[i] * (4096 - w)) >> 12) + ((B.scale[i] * w) >> 12));
+  S.bScale = A.bone;
+}
+
+function meshWeights() {
+  if (!S.ages || !S.mobj) return null;
+  const A = S.ages.a[S.stage].mesh, B = S.ages.b[S.stage].mesh;
+  const out = new Int32Array(A.length);
+  let vary = false;
+  for (let i = 0; i < A.length; i++) {
+    out[i] = meshObjWeight(A[i], B[i], 4096 - S.weight, S.weight);
+    if (out[i] !== S.weight) vary = true;
+  }
+  return vary ? out : null;
+}
+
+function rebuildGeometry() {
+  const w = S.weight;
+  ageVectors();
+  const per = meshWeights();
+  blend(S.pos, S.posA, S.posB, w, per, S.mobj);
+  blend(S.nrm, S.nrmA, S.nrmB, w, per, S.mobj);
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf.pos); gl.bufferData(gl.ARRAY_BUFFER, S.pos, gl.DYNAMIC_DRAW);
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf.nrm); gl.bufferData(gl.ARRAY_BUFFER, S.nrm, gl.DYNAMIC_DRAW);
+  // FUN_8004A520's half: bone lengths are the same lerp.
+  for (let i = 0; i < S.rest.length; i++)
+    S.rest[i] = (4096 * S.restA[i] + w * (S.restB[i] - S.restA[i])) >> 12;
+}
+
+// ------------------------------------------------------- pose -> bone matrices
+// v * s >> 12, rounded toward zero the way the original does it.
+const fx = (v, s) => { const p = v * s; return (p < 0 ? p + 0xfff : p) >> 12; };
+
+function poseBones(clip, frame) {
+  const nb = S.parents.length, stride = (nb + 1) * 3;
+  const bs = S.bScale, g = S.gScale || [4096, 4096, 4096];
+  const keys = clip ? clip.keys : null;
+  const world = [], out = new Float32Array(100 * 4);
+  for (let i = 0; i < nb; i++) {
+    const slf = S.selves[i], par = S.parents[i];
+    let rx = 0, ry = 0, rz = 0;
+    // Two matrices per bone: `m` is the plain world rotation the CHILDREN are built
+    // from, `dm` is that same matrix with this bone's own stage scale on it. Keeping
+    // them apart is the whole point - the authored numbers are absolute (the doc's
+    // "head and limbs run 1.5x-2.0x"), so inheriting them down the chain would put
+    // the jaw at 2.0 x 2.0 = 4x and the hand at 1.5 x 2.0 = 3x. The child's OFFSET
+    // is still taken through the parent's scaled matrix, which is what shortens a
+    // hatchling's neck instead of leaving its head floating off the body.
+    if (keys) {
+      const o = frame * stride + 3 + i * 3;
+      rx = keys[o]; ry = keys[o + 1]; rz = keys[o + 2];
+    }
+    if (slf === 0) { rx = ry = rz = 0; }            // the renderer forces slot 0 flat
+    const r = rotMatrix(rx, ry, rz);
+    let t;
+    if (slf === 1 && keys) {
+      const o = frame * stride;                      // the animated root translation
+      t = [keys[o], keys[o + 1], keys[o + 2]];
+    } else {
+      t = [S.rest[slf * 3], S.rest[slf * 3 + 1], S.rest[slf * 3 + 2]];
+    }
+    let m, wt;
+    if (par === slf) {
+      m = r; wt = t;
+    } else {
+      const ID = { m: [4096,0,0,0,4096,0,0,0,4096], dm: [4096,0,0,0,4096,0,0,0,4096], t: [0,0,0] };
+      const pw = world[S.selves.indexOf(par)] || ID;
+      m = mul3(pw.m, r);
+      const tt = apply3(pw.dm, t[0], t[1], t[2]);   // parent's SCALE stretches the offset
+      wt = [pw.t[0] + tt[0], pw.t[1] + tt[1], pw.t[2] + tt[2]];
+    }
+    // M * diag(s): the scale is in the bone's own frame, and a bone's length axis is
+    // local Y - every rest offset runs along it - so the x and z entries are the
+    // WIDTH and depth of that limb. That is why a stage-0 arm reads (1.5, 1.0, 1.5):
+    // same length, chubbier.
+    let dm = m;
+    if (bs) {
+      const sx = bs[slf * 3], sy = bs[slf * 3 + 1], sz = bs[slf * 3 + 2];
+      dm = [fx(m[0], sx), fx(m[1], sy), fx(m[2], sz),
+            fx(m[3], sx), fx(m[4], sy), fx(m[5], sz),
+            fx(m[6], sx), fx(m[7], sy), fx(m[8], sz)];
+    }
+    world[i] = { m: m, dm: dm, t: wt };
+  }
+  for (let i = 0; i < nb; i++) {
+    const slf = S.selves[i], W = world[i], o = slf * 16;
+    // ...and the whole-body scale goes on last, over both the matrices and the
+    // world translations - the growth ladder itself, 0.40x at stage 0 to 1.00x.
+    for (let r = 0; r < 3; r++) {
+      out[o + r * 4] = fx(W.dm[r * 3], g[0]) / 4096;
+      out[o + r * 4 + 1] = fx(W.dm[r * 3 + 1], g[1]) / 4096;
+      out[o + r * 4 + 2] = fx(W.dm[r * 3 + 2], g[2]) / 4096;
+    }
+    out[o + 12] = fx(W.t[0], g[0]);
+    out[o + 13] = fx(W.t[1], g[1]);
+    out[o + 14] = fx(W.t[2], g[2]);
+  }
+  return out;
+}
+
+// -------------------------------------------------------------------- camera
+function perspective(fov, asp, n, f) {
+  const t = 1 / Math.tan(fov / 2);
+  return new Float32Array([t / asp,0,0,0, 0,t,0,0, 0,0,(f+n)/(n-f),-1, 0,0,2*f*n/(n-f),0]);
+}
+function viewMatrix() {
+  // Game space is Y-down / Z-forward; flip both to get a right-way-up preview.
+  const s = 1 / 260, cy = Math.cos(S.yaw), sy = Math.sin(S.yaw),
+        cp = Math.cos(S.pitch), sp = Math.sin(S.pitch), d = S.dist;
+  const ex = d * cp * sy, ey = d * sp, ez = d * cp * cy;
+  const f = [-ex, -ey, -ez], fl = Math.hypot(...f); for (let i = 0; i < 3; i++) f[i] /= fl;
+  const up = [0, 1, 0];
+  const r = [f[1]*up[2]-f[2]*up[1], f[2]*up[0]-f[0]*up[2], f[0]*up[1]-f[1]*up[0]];
+  const rl = Math.hypot(...r); for (let i = 0; i < 3; i++) r[i] /= rl;
+  const u = [r[1]*f[2]-r[2]*f[1], r[2]*f[0]-r[0]*f[2], r[0]*f[1]-r[1]*f[0]];
+  const M = [r[0],u[0],-f[0],0, r[1],u[1],-f[1],0, r[2],u[2],-f[2],0,
+             -(r[0]*ex+r[1]*ey+r[2]*ez), -(u[0]*ex+u[1]*ey+u[2]*ez),
+             (f[0]*ex+f[1]*ey+f[2]*ez), 1];
+  // fold the world scale + axis flip into the view
+  const F = new Float32Array(16);
+  const W = [s,0,0,0, 0,-s,0,0, 0,0,-s,0, 0,S.panY,0,1];
+  for (let c = 0; c < 4; c++) for (let r2 = 0; r2 < 4; r2++) {
+    let v = 0; for (let k = 0; k < 4; k++) v += W[c*4+k] * M[k*4+r2];
+    F[c*4+r2] = v;
+  }
+  return F;
+}
+
+// -------------------------------------------------------------------- render
+let lastT = 0, acc = 0, drawn = 0;
+function frameLoop(t) {
+  requestAnimationFrame(frameLoop);
+  const dt = (t - lastT) / 1000; lastT = t;
+  const cv = $("#gl"), w = cv.clientWidth, h = cv.clientHeight;
+  if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
+  gl.viewport(0, 0, w, h);
+  gl.clearColor(0.055, 0.048, 0.043, 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  gl.enable(gl.DEPTH_TEST); gl.enable(gl.CULL_FACE); gl.cullFace(gl.BACK);
+  // PS1 polygons wind the other way once the Y/Z flip is folded into the view.
+  gl.frontFace(gl.CW);
+  if (!S.data) return;
+
+  const clip = S.data.anim && S.data.anim.clipsDecoded[S.clip];
+  if (S.playing && clip && clip.frames > 1) {
+    acc += dt * 20;                                    // ~20 fps, the PS1's own cadence
+    if (acc >= 1) { S.frame = (S.frame + Math.floor(acc)) % clip.frames; acc %= 1; syncFrame(); }
+  }
+  drawn++;
+  gl.uniformMatrix4fv(uni.proj, false, perspective(0.85, w / h, 0.05, 60));
+  gl.uniformMatrix4fv(uni.view, false, viewMatrix());
+  gl.uniform4fv(uni.bone, poseBones(clip, S.frame));
+  gl.uniform1fv(uni.partOn, new Float32Array(S.partOn));
+  gl.uniform1f(uni.hue, S.hue);
+  gl.uniform1f(uni.wire, S.wire ? 1 : 0);
+
+  bindAttr(buf.pos, loc.pos, 3, gl.SHORT, true);
+  bindAttr(buf.nrm, loc.nrm, 3, gl.SHORT, true);
+  bindAttr(buf.uv, loc.uv, 2, gl.FLOAT, false);
+  bindAttr(buf.joint, loc.joint, 1, gl.UNSIGNED_BYTE, false);
+  bindAttr(buf.part, loc.part, 1, gl.UNSIGNED_BYTE, false);
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buf.idx);
+  gl.activeTexture(gl.TEXTURE0); gl.uniform1i(uni.tex, 0);
+  const mode = S.wire ? gl.LINES : gl.TRIANGLES;
+  for (const d of S.data.draws) {
+    const tex = d.page >= 0 ? S.textures[d.page] : null;
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.uniform1f(uni.useTex, tex ? 1 : 0);
+    gl.drawElements(mode, d.count, gl.UNSIGNED_SHORT, d.start * 2);
+  }
+}
+function bindAttr(b, l, n, type, norm) {
+  gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.enableVertexAttribArray(l);
+  gl.vertexAttribPointer(l, n, type, type === gl.SHORT ? false : norm, 0, 0);
+}
+requestAnimationFrame(frameLoop);
+
+// ------------------------------------------------------------------ loading
+async function loadPair() {
+  if (S.a == null || S.b == null) return;
+  $("#busy").style.display = "grid"; $("#err").style.display = "none";
+  try {
+    const r = await fetch(`/api/pair/${S.a}/${S.b}`);
+    const d = await r.json();
+    if (d.error) throw new Error(d.error);
+    S.data = d;
+    S.posA = b64(d.pos.a, Int16Array); S.posB = b64(d.pos.b, Int16Array);
+    S.nrmA = b64(d.nrm.a, Int16Array); S.nrmB = b64(d.nrm.b, Int16Array);
+    S.pos = new Int16Array(S.posA.length); S.nrm = new Int16Array(S.nrmA.length);
+    S.parents = d.rig.parent; S.selves = d.rig.self;
+    S.restA = b64(d.anim.restA, Int16Array); S.restB = b64(d.anim.restB, Int16Array);
+    S.rest = new Int16Array(S.restA.length);
+    d.anim.clipsDecoded = d.anim.clips.map(c => ({ ...c, keys: b64(c.keys, Int16Array) }));
+
+    S.ages = d.ages || null;
+    S.mobj = d.geom.mobj ? b64(d.geom.mobj, Uint8Array) : null;
+    S.stage = stageOf(S.level);
+
+    const uv = b64(d.geom.uv, Float32Array), joint = b64(d.geom.joint, Uint8Array);
+    const part = b64(d.geom.part, Uint8Array), idx = b64(d.geom.idx, Uint16Array);
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf.uv); gl.bufferData(gl.ARRAY_BUFFER, uv, gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf.joint); gl.bufferData(gl.ARRAY_BUFFER, joint, gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf.part); gl.bufferData(gl.ARRAY_BUFFER, part, gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buf.idx);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, idx, gl.STATIC_DRAW);
+    S.nIdx = idx.length;
+
+    await loadTextures();
+    rebuildGeometry();
+    fillClips();
+    S.hue = d[S.texsrc].hue; $("#hue").value = S.hue; $("#huev").textContent = S.hue + "°";
+    $("#whoA").textContent = d.a.name; $("#whoB").textContent = d.b.name;
+    $("#meta").textContent =
+      `${d.counts.verts} verts · ${d.counts.tris} tris · files ${d.a.file}/${d.b.file}`;
+    drawPartChips();
+    showAge();
+  } catch (e) { showErr(String(e && e.message || e)); }
+  $("#busy").style.display = "none";
+}
+
+// One VRAM page per atlas; a model uses two or three of them. NEAREST everywhere,
+// because the atlas texels are the game's palette entries and the hue rotation in the
+// fragment shader is only exact on unfiltered ones.
+async function loadTextures() {
+  for (const t of S.textures) gl.deleteTexture(t);
+  S.textures = [];
+  for (const p of S.data.pages[S.texsrc]) {
+    const img = new Image();
+    await new Promise(res => { img.onload = res; img.onerror = res;
+                               img.src = "data:image/png;base64," + p.png; });
+    const t = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, t);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    S.textures.push(t);
+  }
+}
+
+function fillClips() {
+  const sel = $("#clip"); sel.innerHTML = "";
+  S.data.anim.clipsDecoded.forEach((c, i) => {
+    const o = document.createElement("option");
+    o.value = i; o.textContent = c.name; sel.appendChild(o);
+  });
+  S.clip = Math.min(S.clip, S.data.anim.clipsDecoded.length - 1);
+  sel.value = S.clip; S.frame = 0; syncFrame();
+}
+function syncFrame() {
+  const c = S.data.anim.clipsDecoded[S.clip];
+  $("#frame").max = c ? c.frames - 1 : 0;
+  $("#frame").value = S.frame; $("#fv").textContent = S.frame;
+}
+
+// ------------------------------------------------------------------- roster
+function renderList(which) {
+  const ul = which === "a" ? $("#listA") : $("#listB");
+  const q = (which === "a" ? $("#filtA") : $("#filtB")).value.toLowerCase();
+  ul.innerHTML = "";
+  for (const r of S.roster) {
+    if (q && !(r.name.toLowerCase().includes(q) || String(r.id) === q)) continue;
+    const li = document.createElement("li");
+    li.innerHTML = `<span>${r.name}</span><span class="sub">${r.id} · f${r.file}</span>`;
+    if (!r.mergeable) li.className = "off";
+    if (S[which] === r.id) li.className = "sel";
+    if (r.mergeable) li.onclick = () => {
+      S[which] = r.id;
+      (which === "a" ? $("#nameA") : $("#nameB")).textContent = r.name;
+      renderList("a"); renderList("b"); loadPair();
+    };
+    ul.appendChild(li);
+  }
+}
+function drawPartChips() {
+  const names = ["always", "arms", "wings", "legs", "unclaimed"], box = $("#partchips");
+  // partFlagsA is stored PER STAGE, and six models change it as they grow - file
+  // 856 is a hatchling with wings that loses them. The merge rule promotes a 1 to
+  // a 2 and never a 0, so a baby with arms == 0 cannot be given arms at all.
+  const a = S.ages ? S.ages.a[S.stage].flags : S.data.parts.a;
+  const b = S.ages ? S.ages.b[S.stage].flags : S.data.parts.b;
+  const m = a.map((v, k) => (v === 1 && b[k] > 1) ? 2 : v);
+  box.innerHTML = "";
+  names.forEach((n, i) => {
+    if (i === 0) return;
+    const c = document.createElement("span");
+    const on = i <= 3 ? (m[i - 1] >= 2) : true;
+    S.partOn[i] = on ? 1 : 0;
+    c.className = "chip" + (on ? " on" : "");
+    c.textContent = i <= 3 ? `${n} ${a[i-1]}/${b[i-1]}` : n;
+    c.onclick = () => { S.partOn[i] = S.partOn[i] ? 0 : 1; c.classList.toggle("on"); };
+    box.appendChild(c);
+  });
+}
+
+// -------------------------------------------------------------------- input
+$("#w").oninput = e => { S.weight = +e.target.value;
+  $("#wv").textContent = Math.round(S.weight / 4096 * 100) + " %";
+  rebuildGeometry(); showAge(); };
+function showAge() {
+  $("#lvlv").textContent = "lv " + S.level;
+  const pct = Math.round(((S.gScale || [4096])[1]) * 100 / 4096);
+  $("#stagev").textContent = `stage ${S.stage + 1}/5 · ${pct}%`;
+}
+$("#lvl").oninput = e => {
+  S.level = +e.target.value;
+  const st = stageOf(S.level);
+  if (st !== S.stage) { S.stage = st; drawPartChips(); }
+  rebuildGeometry();              // the stage can override a mesh object's weight
+  showAge();
+};
+$("#hue").oninput = e => { S.hue = +e.target.value; $("#huev").textContent = S.hue + "°"; };
+$("#texsrc").onchange = async e => { S.texsrc = e.target.value; await loadTextures();
+  S.hue = S.data[S.texsrc].hue; $("#hue").value = S.hue; $("#huev").textContent = S.hue + "°"; };
+$("#clip").onchange = e => { S.clip = +e.target.value; S.frame = 0; syncFrame(); };
+$("#frame").oninput = e => { S.frame = +e.target.value; $("#fv").textContent = S.frame;
+  S.playing = false; $("#play").classList.remove("on"); $("#play").textContent = "▶ play"; };
+$("#play").onclick = e => { S.playing = !S.playing; e.target.classList.toggle("on", S.playing);
+  e.target.textContent = S.playing ? "⏸ pause" : "▶ play"; };
+$("#wire").onclick = e => { S.wire = !S.wire; e.target.classList.toggle("on", S.wire); };
+$("#reset").onclick = () => { S.yaw = 0.6; S.pitch = 0.15; S.dist = 3.2; S.panY = 0; };
+$("#glb").onclick = async e => {
+  e.target.textContent = "writing…";
+  try {
+    const q = `a=${S.a}&b=${S.b}&w=${S.weight}&tex=${S.texsrc}&hue=${S.hue}` +
+              `&stage=${S.stage}`;
+    const r = await (await fetch("/api/glb?" + q)).json();
+    if (r.error) throw new Error(r.error);
+    e.target.textContent = "✓ written";
+    $("#meta").textContent = r.path;
+  } catch (x) { showErr(String(x.message || x)); e.target.textContent = "export .glb"; }
+  setTimeout(() => e.target.textContent = "export .glb", 2500);
+};
+$("#filtA").oninput = () => renderList("a");
+$("#filtB").oninput = () => renderList("b");
+
+let drag = null;
+$("#gl").onmousedown = e => drag = { x: e.clientX, y: e.clientY, b: e.button };
+addEventListener("mouseup", () => drag = null);
+addEventListener("mousemove", e => {
+  if (!drag) return;
+  const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+  drag.x = e.clientX; drag.y = e.clientY;
+  if (drag.b === 0) { S.yaw -= dx * 0.008; S.pitch = Math.max(-1.4, Math.min(1.4, S.pitch + dy * 0.008)); }
+  else S.panY -= dy * 0.004;
+});
+$("#gl").onwheel = e => { e.preventDefault();
+  S.dist = Math.max(0.6, Math.min(12, S.dist * (1 + Math.sign(e.deltaY) * 0.1))); };
+$("#gl").oncontextmenu = e => e.preventDefault();
+
+window.__studio = { S, get frames() { return drawn; }, gl };
+
+// --------------------------------------------------------------------- boot
+(async () => {
+  try {
+    S.roster = await (await fetch("/api/roster")).json();
+    const m = S.roster.filter(r => r.mergeable);
+    S.a = m[0].id; S.b = m.find(r => r.file !== m[0].file).id;
+    $("#nameA").textContent = S.roster.find(r => r.id === S.a).name;
+    $("#nameB").textContent = S.roster.find(r => r.id === S.b).name;
+    renderList("a"); renderList("b");
+    await loadPair();
+  } catch (e) { showErr("could not reach the server: " + e); }
+})();
+</script>

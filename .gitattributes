@@ -1,0 +1,13 @@
+# Text files normalise to LF in the repo; binaries are left alone.
+* text=auto
+
+*.py    text diff=python
+*.md    text
+*.html  text
+*.json  text
+*.java  text
+
+*.glb   binary
+*.png   binary
+*.bin   binary
+*.obj   -text

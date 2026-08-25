@@ -1,0 +1,21 @@
+# Anything pulled off a disc image. Never commit these: they are the game's own files,
+# not the converted models under models/. You generate this directory yourself by
+# following docs/START_HERE.md.
+/extracted/
+
+# Ghidra project: it contains the game's executable and code.
+/ghidra/
+
+# Raw decompiler output: a mechanical translation of the game's code. Regenerate it with
+# tools/GhidraScripts/ instead. See NOTICE.md.
+/notes/decomp*/
+
+# Superseded export generations. Regenerable, and large.
+/models/archive/
+
+# Local tooling
+.claude/
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db
