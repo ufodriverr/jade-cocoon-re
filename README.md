@@ -4,6 +4,8 @@ Reverse engineering of **Jade Cocoon: Story of the Tamamayu** (PS1, 1998, Genki 
 `SLES-02201`). This repo holds the file-format documentation, the extraction and export
 tools, and 106 exported character models.
 
+![Eight creatures and characters exported from the disc](docs/img/gallery.png)
+
 The headline results:
 
 - **Every model on the disc is exported.** 102 rigged, animated, textured GLB files plus 4
@@ -19,6 +21,22 @@ The headline results:
   studio that blends any two creatures on a slider and writes out a GLB.
 
 Nobody had published a working model export for this game. Now it exists.
+
+## The merge
+
+Jade Cocoon's whole identity is that you fuse two creatures and get a third. It turns out
+the game stores no morph targets at all: **49 creatures share one exact vertex topology**,
+so any two of them are already each other's morph targets, and merging is a per-vertex
+`lerp` in fixed point. The skeleton blends the same way, body parts combine with an OR
+rule, and the texture is not blended at all but selected from one parent and hue-rotated
+by an angle derived from the elemental tallies.
+
+![Arpatron blended into Ehsp in five steps](docs/img/merge_sweep.png)
+
+Five steps of one blend, same rig and same animation frame throughout, so only the geometry
+moves. Every step is a creature that does not exist on the disc. The rules are written up in
+[docs/MERGE_ALGORITHM.md](docs/MERGE_ALGORITHM.md) and implemented in
+`tools/merge_reference.py`, which self-tests against the game's own arithmetic.
 
 ## Quick start
 

@@ -86,6 +86,16 @@ def obj_summary(path):
             "textures": 0, "anims": []}
 
 
+def clean_note(note):
+    """The exporter's note quotes the rig's source as the path it happened to read it
+    from, which is one machine's extraction directory. Say which archive file it was
+    instead: same fact, no stale path, and it lines up with how the docs cite files."""
+    if not note:
+        return note
+    return re.sub(r"[^\s,]*[/\\](\d{4})_[0-9A-Fa-f]+\.bin@(0x[0-9A-Fa-f]+)",
+                  r"archive file \1 @\2", note)
+
+
 def label_for(stem):
     """`jc_0845_Marrdreg` -> (845, 'Marrdreg'). Unnamed files keep their index."""
     base = re.sub(r"_(static|derived)$", "", stem)
@@ -136,8 +146,9 @@ def main():
                     entry["nameSource"] = rec.get("nameSource")
                     entry["rigFile"] = rec.get("rigFile")
                     entry["animFile"] = rec.get("animFile")
-                    entry["fit"] = rec.get("fit")
-                    entry["note"] = rec.get("note")
+                    fit = rec.get("fit")
+                    entry["fit"] = round(fit, 1) if isinstance(fit, float) else fit
+                    entry["note"] = clean_note(rec.get("note"))
             if os.path.isfile(os.path.join(fdir, stem + ".appearance.json")):
                 entry["appearance"] = stem + ".appearance.json"
             entry.update(info)
