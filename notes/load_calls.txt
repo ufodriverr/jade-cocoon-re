@@ -1,0 +1,10 @@
+FUN_80040c98 @ 80040cac -> 80041a70 args: dyn #0x439
+FUN_80041d90 @ 80041da4 -> 80041d44 args:
+FUN_80041d44 @ 80041d54 -> 80041a70 args: dyn dyn
+FUN_80030ae0 @ 80030b10 -> 80041d44 args: dyn
+FUN_80041de4 @ 80041df0 -> 80041a70 args: dyn dyn
+FUN_80020c60 @ 80020cb4 -> 80041d90 args: dyn dyn
+FUN_80042b00 @ 80042b54 -> 80041a70 args: dyn dyn
+FUN_8004241c @ 8004242c -> 80041de4 args: #0x9
+FUN_8004241c @ 80042470 -> 80041de4 args: #0xa
+FUN_8004241c @ 800424c0 -> 80030ae0 args: #0x0 dyn

@@ -10,6 +10,20 @@
 # tools/GhidraScripts/ instead. See NOTICE.md.
 /notes/decomp*/
 
+# Bulk tool output under notes/: session logs and raw Ghidra dumps. Regenerable, large,
+# and nothing reads them - what they taught us is written up in docs/.
+/notes/*.log
+/notes/funcstats_raw.txt
+/notes/psx_named_functions.txt
+
+# Drafts of the write-up. Personal writing rather than research; kept on disk, not
+# published here. Delete these two lines to track them.
+/notes/post_jade_cocoon_2026.md
+/notes/post_jade_cocoon_2026_published.md
+
+# Machine-specific paths.
+/notes/LOCAL_PATHS.md
+
 # Superseded export generations. Regenerable, and large.
 /models/archive/
 
