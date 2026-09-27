@@ -1,0 +1,375 @@
+{
+  "models": {
+    "jc_0831_Levant": {
+      "jc0831_anim00_62f": {
+        "all": true,
+        "info": "",
+        "name": "walk_fwd",
+        "updated": "2026-09-20T15:08:44Z"
+      },
+      "jc0831_anim01_44f": {
+        "all": true,
+        "info": "",
+        "name": "walk_back",
+        "updated": "2026-09-20T15:05:58Z"
+      },
+      "jc0831_anim02_30f": {
+        "all": true,
+        "info": "",
+        "name": "run_fwd",
+        "updated": "2026-09-20T15:09:11Z"
+      },
+      "jc0831_anim03_61f": {
+        "all": true,
+        "info": "",
+        "name": "idle",
+        "updated": "2026-09-20T15:09:12Z"
+      },
+      "jc0831_anim04_62f": {
+        "all": true,
+        "info": "",
+        "name": "idle_2",
+        "updated": "2026-09-20T15:09:12Z"
+      },
+      "jc0831_anim05_62f": {
+        "all": true,
+        "info": "",
+        "name": "walk_full_cycle",
+        "updated": "2026-09-20T15:09:14Z"
+      },
+      "jc0831_anim06_44f": {
+        "all": true,
+        "info": "",
+        "name": "walk_back",
+        "updated": "2026-09-20T15:09:45Z"
+      },
+      "jc0831_anim07_30f": {
+        "all": true,
+        "info": "",
+        "name": "run_fwd",
+        "updated": "2026-09-20T15:09:43Z"
+      },
+      "jc0831_anim08_61f": {
+        "all": true,
+        "info": "",
+        "name": "idle",
+        "updated": "2026-09-20T15:10:01Z"
+      },
+      "jc0831_anim09_62f": {
+        "all": true,
+        "info": "",
+        "name": "idle_2",
+        "updated": "2026-09-20T15:10:02Z"
+      },
+      "jc0831_anim10_40f": {
+        "all": true,
+        "info": "",
+        "name": "talk_1",
+        "updated": "2026-09-20T15:11:08Z"
+      },
+      "jc0831_anim11_40f": {
+        "all": true,
+        "info": "",
+        "name": "talk_2",
+        "updated": "2026-09-20T15:11:08Z"
+      },
+      "jc0831_anim12_20f": {
+        "all": true,
+        "info": "",
+        "name": "idle_pose",
+        "updated": "2026-09-20T15:11:09Z"
+      },
+      "jc0831_anim13_20f": {
+        "all": true,
+        "info": "",
+        "name": "idle_pose_talk",
+        "updated": "2026-09-20T15:11:09Z"
+      },
+      "jc0831_anim14_50f": {
+        "all": true,
+        "info": "",
+        "name": "dont_know",
+        "updated": "2026-09-20T15:11:10Z"
+      },
+      "jc0831_anim15_20f": {
+        "all": true,
+        "info": "",
+        "name": "yes",
+        "updated": "2026-09-20T15:11:10Z"
+      },
+      "jc0831_anim16_42f": {
+        "all": true,
+        "info": "",
+        "name": "no",
+        "updated": "2026-09-20T15:11:11Z"
+      },
+      "jc0831_anim17_120f": {
+        "all": true,
+        "info": "",
+        "name": "sit_down",
+        "updated": "2026-09-20T15:11:21Z"
+      },
+      "jc0831_anim18_30f": {
+        "all": true,
+        "info": "",
+        "name": "stand_up",
+        "updated": "2026-09-20T15:11:20Z"
+      },
+      "jc0831_anim19_20f": {
+        "all": true,
+        "info": "",
+        "name": "sitting_yes",
+        "updated": "2026-09-20T15:11:33Z"
+      },
+      "jc0831_anim20_30f": {
+        "all": true,
+        "info": "",
+        "name": "sitting_no",
+        "updated": "2026-09-20T15:11:32Z"
+      },
+      "jc0831_anim21_90f": {
+        "all": true,
+        "info": "",
+        "name": "sitting_flute",
+        "updated": "2026-09-20T15:15:04Z"
+      },
+      "jc0831_anim22_80f": {
+        "all": true,
+        "info": "",
+        "name": "shop_idle",
+        "updated": "2026-09-20T15:15:04Z"
+      },
+      "jc0831_anim23_80f": {
+        "all": true,
+        "info": "",
+        "name": "sitting_shop_idle",
+        "updated": "2026-09-20T15:15:05Z"
+      },
+      "jc0831_anim32_76f": {
+        "all": true,
+        "info": "",
+        "name": "run_away",
+        "updated": "2026-09-20T15:12:57Z"
+      },
+      "jc0831_anim33_20f": {
+        "all": true,
+        "info": "",
+        "name": "sharing_lower_end",
+        "updated": "2026-09-20T15:16:40Z"
+      },
+      "jc0831_anim34_30f": {
+        "all": true,
+        "info": "",
+        "name": "look_down_idle",
+        "updated": "2026-09-20T15:16:42Z"
+      },
+      "jc0831_anim35_30f": {
+        "all": true,
+        "info": "",
+        "name": "sharing_lower",
+        "updated": "2026-09-20T15:16:17Z"
+      },
+      "jc0831_anim36_30f": {
+        "all": true,
+        "info": "",
+        "name": "look_up_idle",
+        "updated": "2026-09-20T15:16:07Z"
+      },
+      "jc0831_anim37_30f": {
+        "all": true,
+        "info": "",
+        "name": "look_idle",
+        "updated": "2026-09-20T15:16:09Z"
+      },
+      "jc0831_anim38_35f": {
+        "all": true,
+        "info": "",
+        "name": "defense_start",
+        "updated": "2026-09-20T15:13:30Z"
+      },
+      "jc0831_anim39_15f": {
+        "all": true,
+        "info": "",
+        "name": "defense_end",
+        "updated": "2026-09-20T15:13:39Z"
+      },
+      "jc0831_anim40_82f": {
+        "all": true,
+        "info": "",
+        "name": "pull_out_knife",
+        "updated": "2026-09-20T15:13:58Z"
+      },
+      "jc0831_anim41_50f": {
+        "all": true,
+        "info": "",
+        "name": "hide_knife",
+        "updated": "2026-09-20T15:14:07Z"
+      },
+      "jc0831_anim42_70f": {
+        "all": true,
+        "info": "",
+        "name": "knife_attack",
+        "updated": "2026-09-20T15:14:16Z"
+      },
+      "jc0831_anim43_30f": {
+        "all": true,
+        "info": "",
+        "name": "dodge",
+        "updated": "2026-09-20T15:15:35Z"
+      },
+      "jc0831_anim44_41f": {
+        "all": true,
+        "info": "",
+        "name": "got_hit",
+        "updated": "2026-09-20T15:14:59Z"
+      },
+      "jc0831_anim45_50f": {
+        "all": true,
+        "info": "",
+        "name": "knocked_down",
+        "updated": "2026-09-20T15:14:59Z"
+      },
+      "jc0831_anim46_70f": {
+        "all": true,
+        "info": "",
+        "name": "stunned",
+        "updated": "2026-09-20T15:14:58Z"
+      },
+      "jc0831_anim47_30f": {
+        "all": true,
+        "info": "",
+        "name": "stun_end",
+        "updated": "2026-09-20T15:14:57Z"
+      }
+    },
+    "jc_0833_Arpatron": {
+      "jc0833_anim02_32f": {
+        "all": true,
+        "info": "",
+        "name": "walk_fwd",
+        "updated": "2026-09-20T16:37:25Z"
+      },
+      "jc0833_anim03_40f": {
+        "all": true,
+        "info": "",
+        "name": "idle",
+        "updated": "2026-09-20T16:37:29Z"
+      },
+      "jc0833_anim04_70f": {
+        "all": true,
+        "info": "",
+        "name": "scream",
+        "updated": "2026-09-20T16:39:15Z"
+      },
+      "jc0833_anim05_45f": {
+        "all": true,
+        "info": "",
+        "name": "defence_start",
+        "updated": "2026-09-20T16:37:52Z"
+      },
+      "jc0833_anim06_70f": {
+        "all": true,
+        "info": "",
+        "name": "sleep",
+        "updated": "2026-09-20T16:38:08Z"
+      },
+      "jc0833_anim07_30f": {
+        "all": true,
+        "info": "",
+        "name": "wake_up",
+        "updated": "2026-09-20T16:38:16Z"
+      },
+      "jc0833_anim10_32f": {
+        "all": true,
+        "info": "",
+        "name": "walk_fwd",
+        "updated": "2026-09-20T16:38:55Z"
+      },
+      "jc0833_anim11_40f": {
+        "all": true,
+        "info": "",
+        "name": "idle",
+        "updated": "2026-09-20T16:39:01Z"
+      },
+      "jc0833_anim12_70f": {
+        "all": true,
+        "info": "",
+        "name": "scream",
+        "updated": "2026-09-20T16:39:18Z"
+      },
+      "jc0833_anim13_60f": {
+        "all": true,
+        "info": "",
+        "name": "attack_mouth",
+        "updated": "2026-09-20T16:40:04Z"
+      },
+      "jc0833_anim14_70f": {
+        "all": true,
+        "info": "",
+        "name": "attack_tail",
+        "updated": "2026-09-20T16:40:09Z"
+      },
+      "jc0833_anim15_57f": {
+        "all": true,
+        "info": "",
+        "name": "attack_hand",
+        "updated": "2026-09-20T16:40:18Z"
+      },
+      "jc0833_anim16_65f": {
+        "all": true,
+        "info": "",
+        "name": "attack_horn",
+        "updated": "2026-09-20T16:40:18Z"
+      },
+      "jc0833_anim17_45f": {
+        "all": true,
+        "info": "",
+        "name": "attack_legs",
+        "updated": "2026-09-20T16:40:29Z"
+      },
+      "jc0833_anim18_80f": {
+        "all": true,
+        "info": "",
+        "name": "attack_cast",
+        "updated": "2026-09-20T16:40:38Z"
+      },
+      "jc0833_anim19_75f": {
+        "all": true,
+        "info": "",
+        "name": "attack_back",
+        "updated": "2026-09-20T16:40:42Z"
+      },
+      "jc0833_anim20_30f": {
+        "all": true,
+        "info": "",
+        "name": "got_hit",
+        "updated": "2026-09-20T16:40:50Z"
+      },
+      "jc0833_anim21_90f": {
+        "all": true,
+        "info": "",
+        "name": "die",
+        "updated": "2026-09-20T16:40:56Z"
+      },
+      "jc0833_anim22_120f": {
+        "all": true,
+        "info": "",
+        "name": "getting_captured_full_cycle",
+        "updated": "2026-09-20T16:41:24Z"
+      },
+      "jc0833_anim23_45f": {
+        "all": true,
+        "info": "",
+        "name": "defence",
+        "updated": "2026-09-20T16:41:30Z"
+      },
+      "jc0833_anim24_42f": {
+        "all": true,
+        "info": "",
+        "name": "dodge",
+        "updated": "2026-09-20T16:41:36Z"
+      }
+    }
+  },
+  "version": 1
+}

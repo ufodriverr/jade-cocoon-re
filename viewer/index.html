@@ -9,7 +9,7 @@
   *{box-sizing:border-box}
   html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);
     font:13px/1.45 ui-sans-serif,system-ui,"Segoe UI",sans-serif;overflow:hidden}
-  #app{display:grid;grid-template-columns:250px 1fr 260px;height:100%}
+  #app{display:grid;grid-template-columns:250px 1fr 360px;height:100%}
   .side{background:var(--panel);border-right:1px solid var(--line);
     display:flex;flex-direction:column;min-height:0}
   .side.right{border-right:0;border-left:1px solid var(--line)}
@@ -78,6 +78,44 @@
     display:none}
   .foot{padding:8px 12px;border-top:1px solid var(--line);color:var(--dim);font-size:11px}
   .foot a{color:var(--accent2)}
+
+  /* ---------------------------------------------------------------- alias labeling */
+  input[type=text]{background:#0e0c0b;color:var(--ink);border:1px solid var(--line);
+    border-radius:5px;padding:4px 6px;font:inherit}
+  input[type=text]:focus{outline:0;border-color:var(--accent)}
+  input[type=checkbox]{accent-color:var(--accent);margin:0;vertical-align:middle}
+  .row label.chk{min-width:0;text-transform:none;letter-spacing:0;color:var(--dim);
+    display:flex;align-items:center;gap:4px;cursor:pointer;font-size:11px}
+  #aliasId{color:var(--accent2);font-size:11px;font-variant-numeric:tabular-nums;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px;flex:none}
+  .astat{color:var(--dim);font-size:11px;white-space:nowrap;flex:none;min-width:58px}
+  .astat.ok{color:var(--accent2)}
+  .astat.off{color:var(--warn)}
+  .allnote{color:var(--dim);font-size:11px;font-style:italic}
+  #clips{display:flex;flex-direction:column;min-height:0;flex:1.6}
+  .clipwrap{overflow-y:auto;flex:1;min-height:0;padding:3px 0}
+  .cliprow{display:flex;align-items:center;gap:5px;padding:2px 8px;
+    border-bottom:1px solid #251f1c}
+  .cliprow:hover{background:#221e1c}
+  .cliprow.sel{background:#3a2f14;box-shadow:inset 3px 0 0 var(--accent)}
+  .cliprow .cid{flex:none;width:86px;font-size:11px;cursor:pointer;
+    font-variant-numeric:tabular-nums;overflow:hidden;text-overflow:ellipsis;
+    white-space:nowrap}
+  .cliprow .cfr{flex:none;width:32px;text-align:right;color:var(--dim);font-size:10px;
+    font-variant-numeric:tabular-nums}
+  .cliprow .cid.named{color:var(--accent)}
+  .cliprow .cid.inherited{color:var(--dim);font-style:italic}
+  .cliprow input[type=text]{min-width:0;padding:2px 4px;font-size:11px}
+  .cliprow .cnm{flex:1.3}
+  .cliprow .cif{flex:1}
+  .clipfoot{padding:6px 8px;border-top:1px solid var(--line);display:flex;gap:6px;
+    align-items:center;flex-wrap:wrap}
+  .clipfoot button{font-size:11px;padding:3px 6px}
+  ul.list li .badge{flex:none;font-size:10px;font-variant-numeric:tabular-nums;
+    color:var(--dim);border:1px solid var(--line);border-radius:3px;padding:0 3px}
+  ul.list li .badge.some{color:var(--accent)}
+  ul.list li .badge.done{color:var(--accent2);border-color:#3c5c39}
+  dl.info{flex:1}
   @media (max-width:900px){
     #app{grid-template-columns:180px 1fr}
     .side.right{display:none}
@@ -99,7 +137,8 @@
     <div id="title"><h1 id="mname">—</h1><p id="msub"></p></div>
     <div id="hint">
       drag orbit · wheel zoom · shift-drag pan<br>
-      <kbd>space</kbd> play · <kbd>↑</kbd><kbd>↓</kbd> model · <kbd>r</kbd> reset view
+      <kbd>space</kbd> play · <kbd>↑</kbd><kbd>↓</kbd> model · <kbd>r</kbd> reset view<br>
+      <kbd>,</kbd><kbd>.</kbd> clip · <kbd>n</kbd> name it · <kbd>enter</kbd> next clip
     </div>
     <div id="busy">loading</div>
     <div id="err"></div>
@@ -108,6 +147,21 @@
         <label>Clip</label>
         <select id="anim" style="flex:1"></select>
         <button id="play">Pause</button>
+      </div>
+      <div class="row">
+        <label>Alias</label>
+        <span id="aliasId">—</span>
+        <input type="text" id="aliasName" list="roleList" autocomplete="off"
+               placeholder="descriptive name — first word is the role" style="flex:1.3;min-width:0">
+        <input type="text" id="aliasInfo" autocomplete="off"
+               placeholder="additional info" style="flex:1;min-width:0">
+        <label class="chk" title="apply this name to every clip with the same signature (slot + frame count) on every model with the same bone count">
+          <input type="checkbox" id="aliasAll"> All</label>
+        <span class="astat" id="aliasStatus"></span>
+      </div>
+      <div class="row">
+        <label></label>
+        <span class="allnote" id="aliasAllNote"></span>
       </div>
       <div class="row">
         <label>Frame</label>
@@ -136,6 +190,17 @@
       <button id="tSpin">Spin</button>
       <button id="shot">Save PNG</button>
     </div>
+    <div id="clips">
+      <h2>Clips <b id="aliasProgress">—</b></h2>
+      <div class="clipwrap"><div id="clipRows"></div></div>
+      <div class="clipfoot">
+        <span class="astat" id="aliasStatus2"></span>
+        <button id="aliasDl" title="save the alias file to your downloads">Download aliases JSON</button>
+        <button id="aliasLoad" title="merge a saved aliases JSON back in">Load JSON file</button>
+        <input type="file" id="aliasFile" accept=".json,application/json" style="display:none">
+      </div>
+    </div>
+
     <h2>Model</h2>
     <dl class="info" id="info"></dl>
     <div class="foot">
@@ -144,6 +209,14 @@
     </div>
   </div>
 </div>
+
+<datalist id="roleList">
+  <option value="idle"></option><option value="walk"></option><option value="run"></option>
+  <option value="attack"></option><option value="hit"></option><option value="die"></option>
+  <option value="victory"></option><option value="talk"></option><option value="sit"></option>
+  <option value="sleep"></option><option value="lie"></option><option value="special"></option>
+  <option value="other"></option>
+</datalist>
 
 <script>
 "use strict";
@@ -928,10 +1001,17 @@ function renderList() {
     sub.textContent = m.static ? "no rig"
       : `${m.bones}b · ${m.anims.length}a`;
     li.append(nm, sub);
+    if (m.anims && m.anims.length) {
+      const b = document.createElement("span");
+      b.className = "badge";
+      b.title = "animation clips given a name";
+      li.append(b);
+    }
     li.onclick = () => select(i);
     ul.appendChild(li);
   });
   $("#count").textContent = q ? `${shown}/${models.length}` : models.length;
+  updateListBadges();
 }
 
 function renderInfo(m) {
@@ -986,7 +1066,10 @@ function renderAnims(m) {
     const o = document.createElement("option");
     const nf = a.channels[0] ? a.channels[0].times.length : 1;
     o.value = i;
-    o.textContent = `${String(i).padStart(2, "0")} · ${a.name} · ${nf}f`;
+    const clip = (m.anims && m.anims[i] && m.anims[i].name) || a.name;
+    o.dataset.clip = clip;
+    o.dataset.base = `${String(i).padStart(2, "0")} · ${shortClip(clip)} · ${nf}f`;
+    o.textContent = o.dataset.base;
     sel.appendChild(o);
   });
   // Open on the first clip that actually moves; pose blocks are single-frame.
@@ -1008,6 +1091,7 @@ async function select(i) {
     S.index.folders[S.folder].label,
   ].join(" · ");
   renderInfo(m);
+  renderClipTable();   // straight from models.json, so the table is up before the GLB is
 
   S.loading = true;
   busy(true);
@@ -1019,6 +1103,9 @@ async function select(i) {
                        : await loadGLB(`${dir}/${m.file}`);
     S.time = 0;
     renderAnims(m);
+    if (!m.anims || !m.anims.length) renderClipTable();
+    setClip(S.anim, true);
+    refreshAliasViews();   // the select was rebuilt, so re-stamp the alias on its options
     if (S.model.anims.length) {
       S.model.resetPose();
       S.model.applyAnim(S.anim, 0);
@@ -1035,12 +1122,489 @@ async function select(i) {
   }
 }
 
+// ------------------------------------------------------------------------- ui: alias
+// Human names for the animation clips. Every edit rewrites the whole document and POSTs
+// it to tools/anim_labeler.py (debounced). Served by a plain http.server there is no
+// endpoint, so it falls back to localStorage plus the Download / Load buttons.
+//
+//   {"version":1,"models":{"jc_0831_Levant":{"jc0831_anim05_40f":
+//      {"name":"walk","info":"loops cleanly","all":false,"updated":"…Z"}}}}
+//
+// `name` is free text whose first word is the role keyword. `all` marks the alias as
+// belonging to every clip with the same signature (slot + frame count, e.g. anim00_62f) on
+// every model with the same bone count; a same-slot clip of a different length is NOT covered.
+
+const LS_KEY = "jc_animation_aliases";
+
+const AL = {
+  doc: {version: 1, models: {}},
+  online: true,          // is the labeler server answering?
+  timer: null,
+  dirty: false,
+  allIndex: new Map(),   // "bones:num" -> {name, info, stem}   (all:true aliases)
+  slots: new Map(),      // "bones:num" -> [stem, …]            (who owns that slot)
+  rows: [],              // current model's table rows, by clip index
+};
+
+// Clip signature = slot + frame count ("anim00_62f"): an all:true alias only reaches clips
+// with the SAME signature on a same-sized rig, never a same-slot clip of another length.
+const clipNum = name => {
+  const m = /((?:anim|pose)\d+_\d+f)/i.exec(name || "");
+  return m ? m[1].toLowerCase() : null;
+};
+const shortClip = name => String(name || "").replace(/^.*?_(?=(?:anim|pose)\d)/i, "");
+const nowStamp = () => new Date().toISOString().replace(/\.\d+Z$/, "Z");
+const allModels = () => S.index.folders.flatMap(f => f.models);
+
+function indexModels() {
+  AL.slots.clear();
+  for (const m of allModels()) {
+    for (const a of (m.anims || [])) {
+      const n = clipNum(a.name);
+      if (n == null) continue;
+      const k = `${m.bones}:${n}`;
+      const arr = AL.slots.get(k) || [];
+      if (!arr.includes(m.stem)) arr.push(m.stem);
+      AL.slots.set(k, arr);
+    }
+  }
+}
+
+function normalizeDoc(d) {
+  const out = {version: Number.isInteger(d.version) ? d.version : 1, models: {}};
+  const src = (d && typeof d.models === "object" && d.models) || {};
+  for (const [stem, entries] of Object.entries(src)) {
+    if (!entries || typeof entries !== "object") continue;
+    const keep = {};
+    for (const [clip, e] of Object.entries(entries)) {
+      if (!e || typeof e !== "object") continue;
+      const name = String(e.name || "").trim(), info = String(e.info || "").trim();
+      if (!name && !info) continue;
+      keep[clip] = {name, info, all: !!e.all,
+                    updated: typeof e.updated === "string" ? e.updated : nowStamp()};
+    }
+    if (Object.keys(keep).length) out.models[stem] = keep;
+  }
+  return out;
+}
+
+// bones lookup for an arbitrary stem, so an "all" alias knows which family it belongs to
+let bonesByStem = null;
+function bonesOf(stem) {
+  if (!bonesByStem) {
+    bonesByStem = new Map();
+    for (const m of allModels()) bonesByStem.set(m.stem, m.bones);
+  }
+  return bonesByStem.get(stem);
+}
+
+function rebuildAllIndex() {
+  AL.allIndex.clear();
+  for (const stem of Object.keys(AL.doc.models).sort()) {
+    const bones = bonesOf(stem);
+    if (bones == null) continue;
+    for (const [clip, e] of Object.entries(AL.doc.models[stem])) {
+      if (!e.all || !e.name) continue;
+      const n = clipNum(clip);
+      if (n == null) continue;
+      const k = `${bones}:${n}`;
+      if (!AL.allIndex.has(k)) AL.allIndex.set(k, {name: e.name, info: e.info, stem});
+    }
+  }
+}
+
+const ownEntry = (stem, clip) =>
+  (AL.doc.models[stem] && AL.doc.models[stem][clip]) || null;
+
+// A clip with no alias of its own inherits one from an all:true alias on a same-sized rig.
+function inherited(m, clip) {
+  if (!m || ownEntry(m.stem, clip)) return null;
+  const n = clipNum(clip);
+  if (n == null) return null;
+  const hit = AL.allIndex.get(`${m.bones}:${n}`);
+  return hit && hit.stem !== m.stem ? hit : null;
+}
+
+function peerCount(m, clip) {
+  const n = clipNum(clip);
+  if (n == null || !m) return 0;
+  const arr = AL.slots.get(`${m.bones}:${n}`) || [];
+  return arr.filter(s => s !== m.stem).length;
+}
+
+function setEntry(stem, clip, name, info, all) {
+  name = String(name || "").trim();
+  info = String(info || "").trim();
+  const models = AL.doc.models;
+  if (!name && !info) {
+    if (models[stem]) {
+      delete models[stem][clip];
+      if (!Object.keys(models[stem]).length) delete models[stem];
+    }
+  } else {
+    if (!models[stem]) models[stem] = {};
+    models[stem][clip] = {name, info, all: !!all, updated: nowStamp()};
+  }
+  rebuildAllIndex();
+  scheduleSave();
+  refreshAliasViews();
+}
+
+// ---------------------------------------------------------------- alias: persistence
+function setStatus(text, cls) {
+  for (const id of ["#aliasStatus", "#aliasStatus2"]) {
+    const el = $(id);
+    if (!el) continue;
+    el.textContent = text;
+    el.className = "astat" + (cls ? " " + cls : "");
+  }
+}
+
+function scheduleSave() {
+  AL.dirty = true;
+  setStatus(AL.online ? "saving…" : "offline: stored in this browser",
+            AL.online ? "" : "off");
+  clearTimeout(AL.timer);
+  AL.timer = setTimeout(saveNow, 400);
+}
+
+async function saveNow() {
+  clearTimeout(AL.timer);
+  AL.timer = null;
+  if (!AL.dirty) return;
+  AL.dirty = false;
+  const body = JSON.stringify(AL.doc);
+  try { localStorage.setItem(LS_KEY, body); } catch (e) { /* private mode, never mind */ }
+  if (!AL.online) { setStatus("offline: stored in this browser", "off"); return; }
+  try {
+    const res = await fetch("/api/aliases", {
+      method: "POST", headers: {"Content-Type": "application/json"}, body,
+    });
+    if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+    const j = await res.json();
+    if (!j.ok) throw new Error(j.error || "refused");
+    setStatus(`saved · ${j.clips} clip${j.clips === 1 ? "" : "s"}`, "ok");
+  } catch (e) {
+    AL.online = false;
+    setStatus("offline: stored in this browser", "off");
+    console.warn("alias save failed, falling back to localStorage:", e.message);
+  }
+}
+
+async function loadAliases() {
+  let doc = null;
+  try {
+    const res = await fetch("/api/aliases", {cache: "no-store"});
+    if (!res.ok) throw new Error(`${res.status}`);
+    const j = await res.json();
+    if (j && typeof j === "object" && j.models) doc = j;
+  } catch (e) {
+    AL.online = false;
+  }
+  if (!doc) {
+    try {
+      const raw = localStorage.getItem(LS_KEY);
+      if (raw) {
+        const j = JSON.parse(raw);
+        if (j && j.models) doc = j;
+      }
+    } catch (e) { /* ignore */ }
+  }
+  if (doc) AL.doc = normalizeDoc(doc);
+  bonesByStem = null;
+  rebuildAllIndex();
+  const n = Object.values(AL.doc.models).reduce((s, o) => s + Object.keys(o).length, 0);
+  setStatus(AL.online ? `${n} named` : "offline: stored in this browser",
+            AL.online ? "ok" : "off");
+}
+
+function downloadAliases() {
+  const text = JSON.stringify(AL.doc, null, 2) + "\n";
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([text], {type: "application/json"}));
+  a.download = "animation_aliases.json";
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+}
+
+function mergeAliases(text) {
+  let incoming;
+  try {
+    incoming = normalizeDoc(JSON.parse(text));
+  } catch (e) {
+    setStatus("that file is not alias JSON", "off");
+    return;
+  }
+  let n = 0;
+  for (const [stem, entries] of Object.entries(incoming.models)) {
+    if (!AL.doc.models[stem]) AL.doc.models[stem] = {};
+    for (const [clip, e] of Object.entries(entries)) {
+      AL.doc.models[stem][clip] = e;
+      n++;
+    }
+  }
+  rebuildAllIndex();
+  scheduleSave();
+  renderClipTable();
+  refreshAliasViews();
+  setStatus(`merged ${n} clip${n === 1 ? "" : "s"}`, "ok");
+}
+
+// ------------------------------------------------------------------------ alias: ui
+function clipsOf(m) {
+  if (!m) return [];
+  if (m.anims && m.anims.length)
+    return m.anims.map((a, i) => ({i, name: a.name, frames: a.frames}));
+  if (!m.static && S.model && S.model.anims && S.model.anims.length)
+    return S.model.anims.map((a, i) => ({
+      i, name: a.name, frames: a.channels[0] ? a.channels[0].times.length : 1,
+    }));
+  return [];
+}
+
+function namedCount(m) {
+  const own = AL.doc.models[m.stem] || {};
+  let n = 0;
+  for (const a of (m.anims || [])) {
+    const e = own[a.name];
+    if (e && e.name) { n++; continue; }
+    if (inherited(m, a.name)) n++;
+  }
+  return n;
+}
+
+function globalProgress() {
+  let named = 0, total = 0, done = 0, models = 0;
+  for (const m of allModels()) {
+    const t = (m.anims || []).length;
+    if (!t) continue;
+    models++;
+    const n = namedCount(m);
+    named += n; total += t;
+    if (n === t) done++;
+  }
+  return {named, total, done, models};
+}
+
+function renderClipTable() {
+  const wrap = $("#clipRows");
+  wrap.innerHTML = "";
+  AL.rows = [];
+  const m = currentModel();
+  const clips = clipsOf(m);
+  if (!m || !clips.length) {
+    const p = document.createElement("div");
+    p.className = "cliprow";
+    p.style.color = "var(--dim)";
+    p.textContent = m && m.static ? "unrigged model, no clips" : "no clips in this file";
+    wrap.appendChild(p);
+    updateProgress();
+    syncAliasBlock();
+    return;
+  }
+  for (const c of clips) {
+    const row = document.createElement("div");
+    row.className = "cliprow";
+
+    const cid = document.createElement("span");
+    cid.className = "cid";
+    cid.textContent = shortClip(c.name);
+    cid.title = `${c.name} — click to play`;
+    cid.onclick = () => setClip(c.i);
+
+    const fr = document.createElement("span");
+    fr.className = "cfr";
+    fr.textContent = `${c.frames}f`;
+
+    const nm = document.createElement("input");
+    nm.type = "text"; nm.className = "cnm"; nm.autocomplete = "off";
+    nm.setAttribute("list", "roleList");
+
+    const inf = document.createElement("input");
+    inf.type = "text"; inf.className = "cif"; inf.autocomplete = "off";
+    inf.placeholder = "info";
+
+    const all = document.createElement("input");
+    all.type = "checkbox";
+    all.title = `same clip signature (slot + frames) on every ${m.bones}-bone model`;
+
+    const commit = () => {
+      setEntry(m.stem, c.name, nm.value, inf.value, all.checked);
+      if (c.i === S.anim) syncAliasBlock(true);
+    };
+    nm.oninput = inf.oninput = commit;
+    all.onchange = commit;
+    nm.onfocus = () => { if (c.i !== S.anim) setClip(c.i, true); };
+    nm.onkeydown = e => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        saveNow();
+        const nxt = AL.rows[c.i + 1];
+        if (nxt) { setClip(c.i + 1, true); nxt.nm.focus(); nxt.nm.select(); }
+      } else if (e.key === "Escape") { e.preventDefault(); nm.blur(); }
+    };
+    inf.onkeydown = e => {
+      if (e.key === "Enter") { e.preventDefault(); saveNow(); }
+      else if (e.key === "Escape") { e.preventDefault(); inf.blur(); }
+    };
+
+    row.append(cid, fr, nm, inf, all);
+    wrap.appendChild(row);
+    AL.rows[c.i] = {row, cid, nm, inf, all, clip: c.name};
+  }
+  refreshAliasViews();
+  syncAliasBlock();
+  AL.rows.forEach((r, k) => { if (r) r.row.classList.toggle("sel", k === S.anim); });
+}
+
+// Repaint everything derived from the document, without touching a focused input's value.
+function refreshAliasViews() {
+  const m = currentModel();
+  if (m) {
+    for (const r of AL.rows) {
+      if (!r) continue;
+      const own = ownEntry(m.stem, r.clip), inh = inherited(m, r.clip);
+      if (document.activeElement !== r.nm) r.nm.value = own ? own.name : "";
+      if (document.activeElement !== r.inf) r.inf.value = own ? own.info : "";
+      r.all.checked = own ? !!own.all : false;
+      r.nm.placeholder = inh ? `(all) ${inh.name}` : "name";
+      r.cid.classList.toggle("named", !!(own && own.name));
+      r.cid.classList.toggle("inherited", !own && !!inh);
+    }
+  }
+  updateAnimLabels();
+  updateProgress();
+  updateListBadges();
+}
+
+function updateProgress() {
+  const g = globalProgress();
+  const el = $("#aliasProgress");
+  if (el) el.textContent =
+    `named ${g.named} / ${g.total} clips · ${g.done} / ${g.models} models complete`;
+}
+
+function updateListBadges() {
+  const models = folderModels();
+  for (const li of $("#list").children) {
+    const m = models[+li.dataset.i];
+    if (!m) continue;
+    const b = li.querySelector(".badge");
+    if (!b) continue;
+    const t = (m.anims || []).length, n = namedCount(m);
+    b.textContent = n === t ? `✓ ${t}` : `${n}/${t}`;
+    b.className = "badge" + (n === t ? " done" : n ? " some" : "");
+  }
+}
+
+function updateAnimLabels() {
+  const m = currentModel();
+  const sel = $("#anim");
+  if (!m || !sel.options.length) return;
+  for (const o of sel.options) {
+    if (!o.dataset.base) continue;
+    const clip = o.dataset.clip;
+    const own = ownEntry(m.stem, clip), inh = inherited(m, clip);
+    const tag = own && own.name ? ` · ${own.name}`
+              : inh ? ` · (all) ${inh.name}` : "";
+    o.textContent = o.dataset.base + tag;
+  }
+}
+
+function syncAliasBlock(keepFocus) {
+  const m = currentModel();
+  const c = clipsOf(m)[S.anim];
+  const id = $("#aliasId"), nm = $("#aliasName"), inf = $("#aliasInfo"),
+        all = $("#aliasAll"), note = $("#aliasAllNote");
+  if (!m || !c) {
+    id.textContent = "—";
+    nm.value = inf.value = "";
+    nm.disabled = inf.disabled = all.disabled = true;
+    all.checked = false;
+    note.textContent = "";
+    return;
+  }
+  nm.disabled = inf.disabled = all.disabled = false;
+  id.textContent = shortClip(c.name);
+  id.title = c.name;
+  const own = ownEntry(m.stem, c.name), inh = inherited(m, c.name);
+  if (!keepFocus || document.activeElement !== nm) nm.value = own ? own.name : "";
+  if (!keepFocus || document.activeElement !== inf) inf.value = own ? own.info : "";
+  all.checked = own ? !!own.all : false;
+  nm.placeholder = inh ? `(all) ${inh.name} — type to override`
+                       : "descriptive name — first word is the role";
+  inf.placeholder = inh && inh.info ? `(all) ${inh.info}` : "additional info";
+  const n = peerCount(m, c.name);
+  note.textContent = `All: applies to ${shortClip(c.name)} on ${n} other `
+    + `model${n === 1 ? "" : "s"} with ${m.bones} bones`
+    + (inh ? ` · inherited from ${inh.stem}` : "");
+}
+
+function currentModel() {
+  const ms = folderModels();
+  return ms[S.sel] || null;
+}
+
+function setClip(i, noScroll) {
+  const clips = clipsOf(currentModel());
+  if (!clips.length) return;
+  i = Math.max(0, Math.min(clips.length - 1, i));
+  S.anim = i;
+  S.time = 0;
+  const sel = $("#anim");
+  if (sel.options.length > i) sel.value = i;
+  AL.rows.forEach((r, k) => { if (r) r.row.classList.toggle("sel", k === i); });
+  if (!noScroll && AL.rows[i]) AL.rows[i].row.scrollIntoView({block: "nearest"});
+  syncAliasBlock();
+}
+
+const stepClip = d => setClip(S.anim + d);
+
+$("#aliasName").oninput = $("#aliasInfo").oninput = () => {
+  const m = currentModel(), c = clipsOf(m)[S.anim];
+  if (!m || !c) return;
+  setEntry(m.stem, c.name, $("#aliasName").value, $("#aliasInfo").value,
+           $("#aliasAll").checked);
+};
+$("#aliasAll").onchange = () => {
+  const m = currentModel(), c = clipsOf(m)[S.anim];
+  if (!m || !c) return;
+  setEntry(m.stem, c.name, $("#aliasName").value, $("#aliasInfo").value,
+           $("#aliasAll").checked);
+  syncAliasBlock(true);
+};
+$("#aliasName").onkeydown = e => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    saveNow();
+    stepClip(1);
+    $("#aliasName").focus();
+    $("#aliasName").select();
+  } else if (e.key === "Escape") { e.preventDefault(); e.target.blur(); }
+};
+$("#aliasInfo").onkeydown = e => {
+  if (e.key === "Enter") { e.preventDefault(); saveNow(); }
+  else if (e.key === "Escape") { e.preventDefault(); e.target.blur(); }
+};
+$("#aliasDl").onclick = downloadAliases;
+$("#aliasLoad").onclick = () => $("#aliasFile").click();
+$("#aliasFile").onchange = e => {
+  const f = e.target.files && e.target.files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = () => mergeAliases(String(r.result));
+  r.readAsText(f);
+  e.target.value = "";
+};
+window.addEventListener("beforeunload", () => { if (AL.dirty) saveNow(); });
+
 // ------------------------------------------------------------------------ ui: controls
 $("#filter").oninput = renderList;
 
 $("#anim").onchange = e => {
   S.anim = +e.target.value;
   S.time = 0;
+  setClip(S.anim, true);
 };
 $("#play").onclick = () => {
   S.playing = !S.playing;
@@ -1118,9 +1682,19 @@ canvas.addEventListener("wheel", e => {
 }, {passive: false});
 
 window.addEventListener("keydown", e => {
-  if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT") return;
+  const t = e.target;
+  // Never steal keys from the alias inputs: no model hopping while someone types a name.
+  if (t && (t.tagName === "INPUT" || t.tagName === "SELECT" || t.tagName === "TEXTAREA"
+            || t.isContentEditable)) return;
   const models = folderModels();
-  if (e.key === " ") { e.preventDefault(); $("#play").click(); }
+  if (e.key === "," || e.key === "[") { e.preventDefault(); stepClip(-1); }
+  else if (e.key === "." || e.key === "]") { e.preventDefault(); stepClip(1); }
+  else if (e.key === "n" || e.key === "N") {
+    e.preventDefault();
+    const nm = $("#aliasName");
+    if (!nm.disabled) { nm.focus(); nm.select(); }
+  }
+  else if (e.key === " ") { e.preventDefault(); $("#play").click(); }
   else if (e.key === "ArrowDown") { e.preventDefault(); select(Math.min(S.sel+1, models.length-1)); }
   else if (e.key === "ArrowUp") { e.preventDefault(); select(Math.max(S.sel-1, 0)); }
   else if (e.key === "r" || e.key === "R") { if (S.model) frameModel(); }
@@ -1146,6 +1720,8 @@ window.addEventListener("keydown", e => {
     showErr("models.json lists no models. Run tools/build_viewer_index.py.");
     return;
   }
+  indexModels();
+  await loadAliases();
   renderTabs();
   renderList();
   // Open on something rigged and named rather than the unnamed static meshes that

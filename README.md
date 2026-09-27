@@ -56,6 +56,18 @@ This is a **viewer**, not a merger. Its "Merged" tab holds files that were alrea
 and written out by `merge_reference.py`; nothing in the browser is doing the blending. To
 mix two creatures yourself, and watch it happen, use Merge Studio below.
 
+### Name the animations
+
+The disc calls its clips `anim05`, `anim06`, and nothing else, so the viewer can also
+collect a human name for every one of them. Run `python tools/anim_labeler.py --open`,
+which serves the same viewer plus a small save endpoint. Each clip gets a **descriptive
+name** whose first word is the role keyword (idle, walk, run, attack, hit, die, victory,
+talk, sit, sleep, lie, special, other), free **additional info**, and an **All** checkbox
+that reuses the name for every clip with the same signature (slot and frame count, e.g. anim00_62f) on every model with the same bone count, which
+is how the 25-bone minion family shares its clip order. Edits autosave to
+[`models/current/animation_aliases.json`](models/current), and the Unity remake reads that
+file to pick which clip to play.
+
 ### Open them in Blender
 
 Drag any file from [`models/current/`](models/current) into Blender. They are ordinary
